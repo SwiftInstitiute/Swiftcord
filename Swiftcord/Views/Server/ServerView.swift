@@ -246,6 +246,7 @@ struct ServerView: View {
             if serverCtx.typingStarted[typingData.channel_id] == nil {
               serverCtx.typingStarted[typingData.channel_id] = []
             }
+
             serverCtx.typingStarted[typingData.channel_id]!.append(typingData)
             DispatchQueue.main.asyncAfter(deadline: .now() + 9) {
               serverCtx.typingStarted[typingData.channel_id]?.removeAll {

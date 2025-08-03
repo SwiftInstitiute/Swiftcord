@@ -288,37 +288,91 @@ struct MessagesView: View {
         }
     }
 
+    private var hasSendPermission: Bool {
+        // For DMs and group DMs, always allow sending messages
+        if serverCtx.channel?.type == .dm || serverCtx.channel?.type == .groupDM {
+            return true
+        }
+        
+        // For server channels, check permissions
+        guard let guildID = serverCtx.guild?.id, let member = serverCtx.member else {
+            return true // Default to allowing if we can't determine permissions
+        }
+        
+        return serverCtx.channel?.computedPermissions(
+            guildID: guildID, member: member, basePerms: serverCtx.basePermissions
+        )
+        .contains(.sendMessages) ?? true
+    }
+    
+    private var placeholderText: LocalizedStringKey {
+        if !hasSendPermission {
+            return "You do not have permission to send messages in this channel."
+        }
+        
+        let channelLabel = serverCtx.channel?.label(gateway.cache.users) ?? ""
+        
+        switch serverCtx.channel?.type {
+        case .dm:
+            return "dm.composeMsg.hint \(channelLabel)"
+        case .groupDM:
+            return "dm.group.composeMsg.hint \(channelLabel)"
+        default:
+            return "server.composeMsg.hint \(channelLabel)"
+        }
+    }
+    
+    private var typingIndicator: some View {
+        let typingMembers: [String] = serverCtx.channel == nil
+        ? []
+        : serverCtx.typingStarted[serverCtx.channel!.id]?
+            .compactMap { typingStart in
+                // Try to get the display name from member data first
+                if let nick = typingStart.member?.nick, !nick.isEmpty {
+                    return nick
+                }
+                if let username = typingStart.member?.user?.username, !username.isEmpty {
+                    return username
+                }
+                // Try to get username from cache if member data is not available
+                let userId = typingStart.user_id
+                if let cachedUser = gateway.cache.users[userId] {
+                    return cachedUser.username
+                }
+                // Fallback to user ID
+                return "User \(userId)"
+            } ?? []
+        
+        if !typingMembers.isEmpty {
+            return AnyView(
+                HStack {
+                    // The dimensions are quite arbitrary
+                    LottieView(name: "typing-animation", play: .constant(true), width: 160, height: 160)
+                        .lottieLoopMode(.loop)
+                        .frame(width: 32, height: 24)
+                    Group {
+                        Text(
+                            typingMembers.count <= 2
+                            ? typingMembers.joined(separator: " and ")
+                            : "Several people"
+                        ).fontWeight(.semibold)
+                        + Text(" \(typingMembers.count == 1 ? "is" : "are") typing...")
+                    }.padding(.leading, -4)
+                }
+                .padding(.horizontal, 16)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+            )
+        } else {
+            return AnyView(EmptyView())
+        }
+    }
+    
     private var inputContainer: some View {
         ZStack(alignment: .topLeading) {
             MessageInfoBarView(isShown: $viewModel.showingInfoBar, state: $viewModel.infoBarData)
-
-            let hasSendPermission: Bool = {
-                // For DMs and group DMs, always allow sending messages
-                if serverCtx.channel?.type == .dm || serverCtx.channel?.type == .groupDM {
-                    return true
-                }
-                
-                // For server channels, check permissions
-                guard let guildID = serverCtx.guild?.id, let member = serverCtx.member else {
-                    return true // Default to allowing if we can't determine permissions
-                }
-                
-                return serverCtx.channel?.computedPermissions(
-                    guildID: guildID, member: member, basePerms: serverCtx.basePermissions
-                )
-                .contains(.sendMessages) ?? true
-            }()
-
+            
             MessageInputView(
-                placeholder: hasSendPermission ?
-                (serverCtx.channel?.type == .dm
-                 ? "dm.composeMsg.hint \(serverCtx.channel?.label(gateway.cache.users) ?? "")"
-                 : (serverCtx.channel?.type == .groupDM
-                    ? "dm.group.composeMsg.hint \(serverCtx.channel?.label(gateway.cache.users) ?? "")"
-                    : "server.composeMsg.hint \(serverCtx.channel?.label(gateway.cache.users) ?? "")"
-                   )
-                )
-                : "You do not have permission to send messages in this channel.",
+                placeholder: placeholderText,
                 message: $viewModel.newMessage, attachments: $viewModel.attachments, replying: $viewModel.replying,
                 onSend: sendMessage,
                 preAttach: preAttachChecks
@@ -336,30 +390,7 @@ struct MessagesView: View {
                 }
             }
             .overlay {
-                let typingMembers = serverCtx.channel == nil
-                ? []
-                : serverCtx.typingStarted[serverCtx.channel!.id]?
-                    .map { $0.member?.nick ?? $0.member?.user?.username ?? "" } ?? []
-
-                if !typingMembers.isEmpty {
-                    HStack {
-                        // The dimensions are quite arbitrary
-                        // FIXME: The animation broke, will have to fix it
-                        LottieView(name: "typing-animatiokn", play: .constant(true), width: 160, height: 160)
-                            .lottieLoopMode(.loop)
-                            .frame(width: 32, height: 24)
-                        Group {
-                            Text(
-                                typingMembers.count <= 2
-                                ? typingMembers.joined(separator: " and ")
-                                : "Several people"
-                            ).fontWeight(.semibold)
-                            + Text(" \(typingMembers.count == 1 ? "is" : "are") typing...")
-                        }.padding(.leading, -4)
-                    }
-                    .padding(.horizontal, 16)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
-                }
+                typingIndicator
             }
             .heightReader($messageInputHeight)
         }

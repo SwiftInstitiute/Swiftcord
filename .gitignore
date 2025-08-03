@@ -1,3 +1,5 @@
 xcuserdata/
 .devcontainer/
 .DS_Store
+Export/
+*.xcarchive
