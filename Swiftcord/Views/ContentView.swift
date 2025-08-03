@@ -17,6 +17,7 @@ struct ContentView: View {
     @EnvironmentObject var accountsManager: AccountSwitcher
     
     @State private var presentingAddServer = false
+    @StateObject private var sharedServerContext = ServerContext()
     
     // Dynamic server loading
     @State private var isLoadingGuilds = false
@@ -159,7 +160,11 @@ struct ContentView: View {
                 }
                 .padding(.top, 4)
 
-                HorizontalDividerView().frame(width: 32)
+                Rectangle()
+                    .frame(height: 0.5)
+                    .foregroundColor(Color.gray.opacity(0.2))
+                    .frame(width: 32)
+                    .padding(.vertical, 8)
 
                 LazyVStack(spacing: 8) {
                     ForEach(self.serverListItems) { item in
@@ -198,24 +203,132 @@ struct ContentView: View {
                     presentingAddServer = true
                 }.padding(.bottom, 4)
             }
-            .padding(.bottom, 8)
-            .frame(width: 72)
+            .padding(.horizontal, 8)
         }
-        .frame(maxHeight: .infinity, alignment: .top)
-        .background(Color(nsColor: NSColor.controlBackgroundColor).opacity(0.5))
+        .frame(width: 72, height: .infinity, alignment: .top)
+        .background(.ultraThinMaterial)
+        .overlay(
+            Rectangle()
+                .frame(width: 0.5)
+                .foregroundColor(Color.gray.opacity(0.15))
+                .offset(x: 35.75)
+        )
+    }
+    
+    private var channelListView: some View {
+        VStack(spacing: 0) {
+            if let guild = getSelectedGuild() {
+                // Header with guild name and search
+                HStack {
+                    Text(guild.properties.name == "DMs" ? "Direct Messages" : guild.properties.name)
+                        .font(.title3)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primary)
+                    
+                    Spacer()
+                    
+                    Button(action: {}) {
+                        Image(systemName: "magnifyingglass")
+                            .font(.title3)
+                            .foregroundColor(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                                
+                // Channel list
+                ChannelList(
+                    channels: guild.properties.name == "DMs" ? gateway.cache.dms : guild.channels.compactMap { try? $0.unwrap() },
+                    selCh: $sharedServerContext.channel
+                )
+                .environmentObject(sharedServerContext)
+                
+                Spacer()
+                
+                // User footer at the bottom
+                if let user = gateway.cache.user {
+                    CurrentUserFooter(user: user)
+                }
+            } else {
+                // Loading state
+                VStack {
+                    Spacer()
+                    ProgressView("Loading...")
+                        .foregroundColor(.secondary)
+                    Spacer()
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+        }
+        .frame(width: 280)
+        .background(Color.clear)
     }
     
     var body: some View {
-        HStack(spacing: 0) {
-            serverListView
-            ServerView(
-                guild: Binding(
-                    get: { state.selectedGuildID == nil ? nil : (state.selectedGuildID == "@me" ? makeDMGuild() : gateway.cache.guilds[state.selectedGuildID!]) },
-                    set: { _ in }
-                )
-            )
+        ZStack {
+            // Show loading view during initial states
+            if state.loadingState == .initial || state.loadingState == .gatewayConn {
+                LoadingView()
+            } else {
+                // Main content when loaded - three panel layout
+                HStack(spacing: 0) {
+                    // Server list (left panel)
+                    serverListView
+                    
+                    // Channel list (middle panel)
+                    channelListView
+                    
+                    // Content area (right panel)
+                    if let selectedGuildID = state.selectedGuildID {
+                        ServerView(
+                            guild: Binding(
+                                get: { selectedGuildID == "@me" ? makeDMGuild() : gateway.cache.guilds[selectedGuildID] },
+                                set: { _ in }
+                            )
+                        )
+                        .environmentObject(sharedServerContext)
+                    } else {
+                        // Welcome screen when no server is selected
+                        VStack(spacing: 24) {
+                            Image(systemName: "server.rack")
+                                .font(.system(size: 64))
+                                .foregroundColor(.secondary)
+                                .background(.ultraThinMaterial)
+                                .clipShape(Circle())
+                            
+                            VStack(spacing: 8) {
+                                Text("Welcome to Swiftcord")
+                                    .font(.title2)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.primary)
+                                
+                                Text("Select a server from the left to get started")
+                                    .font(.body)
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.center)
+                            }
+                        }
+                        .background(.ultraThinMaterial)
+                        .clipShape(RoundedRectangle(cornerRadius: 20))
+                        .padding(40)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(
+                            LinearGradient(
+                                colors: [
+                                    Color(red: 0.08, green: 0.08, blue: 0.12),
+                                    Color(red: 0.05, green: 0.05, blue: 0.08)
+                                ],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                    }
+                }
+            }
         }
         .environmentObject(audioManager)
+        .background(Color.clear)
         .onChange(of: state.selectedGuildID) { id in
             guard let id = id else { return }
             UserDefaults.standard.set(id.description, forKey: "lastSelectedGuild")

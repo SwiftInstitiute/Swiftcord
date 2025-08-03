@@ -33,6 +33,7 @@ struct ChannelButton: View, Equatable {
 struct GuildChButton: View {
 	let channel: Channel
 	@Binding var selectedCh: Channel?
+	@State private var hovered = false
 
 	@EnvironmentObject var state: UIState
 
@@ -48,7 +49,13 @@ struct GuildChButton: View {
 				.padding(.vertical, 5)
 				.padding(.horizontal, 4)
 				.frame(maxWidth: .infinity, alignment: .leading)
+				.background(
+					RoundedRectangle(cornerRadius: 6)
+						.fill(hovered ? Color.gray.opacity(0.1) : Color.clear)
+				)
 		}
+		.onHover { hover in hovered = hover }
+		.animation(.easeInOut(duration: 0.2), value: hovered)
 	}
 }
 

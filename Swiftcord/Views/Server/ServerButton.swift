@@ -66,12 +66,24 @@ struct ServerButton: View {
 				)
 				.background(.ultraThinMaterial)
 				.clipShape(RoundedRectangle(cornerRadius: 12))
+				.scaleEffect(hovered ? 1.05 : 1.0)
+				.shadow(color: hovered ? .black.opacity(0.2) : .clear, radius: hovered ? 8 : 0, x: 0, y: 2)
+				.animation(.easeInOut(duration: 0.2), value: hovered)
 				.popover(isPresented: $hovered) {
-					Text(name)
-						.font(.title3)
-						.padding(8)
-						.background(.ultraThinMaterial)
-						.clipShape(RoundedRectangle(cornerRadius: 8))
+					VStack(spacing: 8) {
+						Text(name)
+							.font(.title3)
+							.fontWeight(.semibold)
+						
+						if let guild = guild {
+							Text("\(guild.member_count ?? 0) members")
+								.font(.caption)
+								.foregroundColor(.secondary)
+						}
+					}
+					.padding(12)
+					.background(.ultraThinMaterial)
+					.clipShape(RoundedRectangle(cornerRadius: 12))
 				}
 		}
 		.padding(.horizontal, 8)
@@ -126,18 +138,35 @@ struct ServerButtonStyle: ButtonStyle {
 		.frame(width: 48, height: 48)
 		.foregroundColor(hovered || selected ? .white : Color(nsColor: .labelColor))
 		.background(
-			hovered || selected
-			? (serverIconURL != nil ? .gray.opacity(0.35) : bgColor ?? Color.accentColor)
-			: .gray.opacity(0.25)
+			Group {
+				if hovered || selected {
+					if let bgColor = bgColor {
+						LinearGradient(
+							colors: [bgColor.opacity(0.8), bgColor.opacity(0.6)],
+							startPoint: .topLeading,
+							endPoint: .bottomTrailing
+						)
+					} else if serverIconURL != nil {
+						Color.gray.opacity(0.2)
+					} else {
+						LinearGradient(
+							colors: [Color.accentColor.opacity(0.8), Color.accentColor.opacity(0.6)],
+							startPoint: .topLeading,
+							endPoint: .bottomTrailing
+						)
+					}
+				} else {
+					Color.gray.opacity(0.15)
+				}
+			}
 		)
-		/*.background(LinearGradient(
-		 gradient: hovered || selected
-		 ? (bgColor != nil ? Gradient(colors: [bgColor!])
-		 : Gradient(stops: [
-		 .init(color: .blue, location: 0),
-		 .init(color: .yellow, location: 0.5)
-		 ]))
-		 : Gradient(colors: [.gray.opacity(0.25)]), startPoint: .top, endPoint: .bottom))*/
+		.overlay(
+			RoundedRectangle(cornerRadius: hovered || selected ? 16 : 24, style: .continuous)
+				.stroke(
+					hovered || selected ? Color.white.opacity(0.2) : Color.clear,
+					lineWidth: hovered || selected ? 0.5 : 0
+				)
+		)
 		.mask {
 			RoundedRectangle(cornerRadius: hovered || selected ? 16 : 24, style: .continuous)
 		}

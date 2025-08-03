@@ -23,7 +23,7 @@ struct ServerView: View {
   @State private var evtID: EventDispatch.HandlerIdentifier?
   @State private var mediaCenterOpen: Bool = false
   
-  @StateObject private var serverCtx = ServerContext()
+  @EnvironmentObject var serverCtx: ServerContext
   
   @EnvironmentObject var state: UIState
   @EnvironmentObject var gateway: DiscordGateway
@@ -87,7 +87,7 @@ struct ServerView: View {
   }
   
   private var sidebarContent: some View {
-    VStack {
+    VStack(spacing: 0) {
       if let guildCtx = guild {
         // Modern channel list with glass effect
         ChannelList(channels: guildCtx.properties.name == "DMs" ? gateway.cache.dms : guildCtx.channels.compactMap { try? $0.unwrap() }, selCh: $serverCtx.channel)
@@ -105,26 +105,42 @@ struct ServerView: View {
                 
                 Button(action: toggleSidebar) {
                   Image(systemName: "sidebar.left")
+                    .font(.title2)
                     .foregroundColor(.secondary)
                 }
                 .buttonStyle(.plain)
               }
-              .frame(maxWidth: 208) // Largest width before disappearing
+              .padding(.horizontal, 16)
+              .padding(.vertical, 8)
             }
           }
+          .frame(maxWidth: .infinity, maxHeight: .infinity)
+      } else {
+        // Show loading state when no guild is selected
+        VStack {
+          Spacer()
+          ProgressView("Loading...")
+            .foregroundColor(.secondary)
+          Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+      }
+      
+      Spacer()
+      
+      // User footer at the bottom
+      if let user = gateway.cache.user {
+        CurrentUserFooter(user: user)
+          .background(.ultraThinMaterial)
       }
     }
-    .background(.ultraThinMaterial)
+    .frame(minWidth: 240, maxWidth: .infinity)
+     .background(.ultraThinMaterial)
   }
   
   var body: some View {
-    HStack(spacing: 0) {
-      // Modern sidebar with glass effect
-      sidebarContent
-        .frame(width: 240)
-        .background(.ultraThinMaterial)
-      
-      // Modern content area
+    Group {
+      // Content area only - sidebar is now handled in ContentView
       if let channel = serverCtx.channel {
         MessagesView()
           .environmentObject(serverCtx)

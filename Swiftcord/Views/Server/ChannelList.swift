@@ -23,12 +23,21 @@ struct ChannelList: View, Equatable {
 		ChannelButton(channel: channel, selectedCh: $selCh)
 			.equatable()
 			.listRowInsets(.init(top: 1, leading: 0, bottom: 1, trailing: 0))
-			.listRowBackground(Spacer().overlay(alignment: .leading) {
-				// Check if we should show unread indicator
-				if let lastID = gateway.readState[channel.id]?.last_message_id, let _chLastID = channel.last_message_id, let chLastID = Int(_chLastID), lastID.intValue < chLastID {
-					Circle().fill(.primary).frame(width: 8, height: 8).offset(x: 2)
+			.listRowBackground(
+				Group {
+					if selCh?.id == channel.id {
+						// No background for selected items - clean liquid glass effect
+						Color.clear
+					} else {
+						Spacer().overlay(alignment: .leading) {
+							// Check if we should show unread indicator
+							if let lastID = gateway.readState[channel.id]?.last_message_id, let _chLastID = channel.last_message_id, let chLastID = Int(_chLastID), lastID.intValue < chLastID {
+								Circle().fill(.primary).frame(width: 8, height: 8).offset(x: 2)
+							}
+						}
+					}
 				}
-			})
+			)
 			.contextMenu {
 				let isRead = gateway.readState[channel.id]?.id == channel.last_message_id
 				Button(action: { Task { await readChannel(channel) } }) {
@@ -94,78 +103,76 @@ struct ChannelList: View, Equatable {
 			)
 			.contains(.viewChannel)
 		}
-		List {
-			// Spacer(minLength: 4).listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0)) // 38 (header) - 16 (unremovable section top padding) + 4 (spacing)
+		ScrollView {
+			LazyVStack(spacing: 0) {
+				// Spacer(minLength: 4).listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0)) // 38 (header) - 16 (unremovable section top padding) + 4 (spacing)
 
-			let filteredChannels = availableChs.filter {
-				$0.parent_id == nil && $0.type != .category && (nsfwShown || ($0.nsfw == false || $0.nsfw == nil))
-			}
-			if !filteredChannels.isEmpty {
-				Section(
-					header: Text(serverCtx.guild?.properties.isDMChannel == true
-						? "dm"
-						: "server.channel.noCategory"
-					).textCase(.uppercase).padding(.leading, 8)
-					.foregroundColor(.secondary)
-					.font(.caption)
-				) {
-					let channels = filteredChannels.discordSorted()
-					ForEach(channels, id: \.id) { channel in 
-						item(for: channel)
-							.background(.ultraThinMaterial)
-							.clipShape(RoundedRectangle(cornerRadius: 8))
-							.padding(.vertical, 2)
-					}
+				let filteredChannels = availableChs.filter {
+					$0.parent_id == nil && $0.type != .category && (nsfwShown || ($0.nsfw == false || $0.nsfw == nil))
 				}
-			}
-
-			let categoryChannels = availableChs
-				.filter { $0.parent_id == nil && $0.type == .category }
-				.discordSorted()
-			ForEach(categoryChannels, id: \.id) { channel in
-				// Channels in this section
-				let channels = availableChs.filter {
-					$0.parent_id == channel.id && (nsfwShown || ($0.nsfw == false || $0.nsfw == nil))
-				}.discordSorted()
-				if !channels.isEmpty {
-					Section(
-						header: Text(channel.name ?? "").textCase(.uppercase).padding(.leading, 8)
-							.foregroundColor(.secondary)
-							.font(.caption)
-					) {
+				if !filteredChannels.isEmpty {
+					VStack(alignment: .leading, spacing: 0) {
+						Text(serverCtx.guild?.properties.isDMChannel == true
+							? "dm"
+							: "server.channel.noCategory"
+						).textCase(.uppercase).padding(.leading, 8)
+						.foregroundColor(.secondary)
+						.font(.caption)
+						.padding(.top, 8)
+						.padding(.bottom, 4)
+						
+						let channels = filteredChannels.discordSorted()
 						ForEach(channels, id: \.id) { channel in 
 							item(for: channel)
-								.background(.ultraThinMaterial)
 								.clipShape(RoundedRectangle(cornerRadius: 8))
 								.padding(.vertical, 2)
 						}
 					}
-					.contextMenu {
-						Button(action: { Task { await readChannels(channels) } }) {
-							Image(systemName: "message.badge")
-							Text("Mark as read")
+				}
+
+				let categoryChannels = availableChs
+					.filter { $0.parent_id == nil && $0.type == .category }
+					.discordSorted()
+				ForEach(categoryChannels, id: \.id) { channel in
+					// Channels in this section
+					let channels = availableChs.filter {
+						$0.parent_id == channel.id && (nsfwShown || ($0.nsfw == false || $0.nsfw == nil))
+					}.discordSorted()
+					if !channels.isEmpty {
+						VStack(alignment: .leading, spacing: 0) {
+							Text(channel.name ?? "").textCase(.uppercase).padding(.leading, 8)
+								.foregroundColor(.secondary)
+								.font(.caption)
+								.padding(.top, 8)
+								.padding(.bottom, 4)
+							
+							ForEach(channels, id: \.id) { channel in 
+								item(for: channel)
+									.clipShape(RoundedRectangle(cornerRadius: 8))
+									.padding(.vertical, 2)
+							}
 						}
-						
-						Divider()
-						
-						Button(action: { copyId(channel) }) {
-							Image(systemName: "number.circle.fill")
-							Text("Copy ID")
+						.contextMenu {
+							Button(action: { Task { await readChannels(channels) } }) {
+								Image(systemName: "message.badge")
+								Text("Mark as read")
+							}
+							
+							Divider()
+							
+							Button(action: { copyId(channel) }) {
+								Image(systemName: "number.circle.fill")
+								Text("Copy ID")
+							}
 						}
 					}
 				}
 			}
 		}
 		.environment(\.defaultMinListRowHeight, 1)
-		.padding(.horizontal, -6)
-		.listStyle(.sidebar)
+		.padding(.horizontal, 6)
 		.frame(minWidth: 240, maxHeight: .infinity)
-		.background(.ultraThinMaterial)
-		.introspectTableView { tableView in
-			tableView.enclosingScrollView!.scrollerInsets = .init(top: 0, left: 0, bottom: 0, right: 6)
-			tableView.enclosingScrollView!.automaticallyAdjustsContentInsets = false
-			tableView.enclosingScrollView!.contentInsets = .init()
-		}
+		.background(Color.clear)
 		.environment(\.defaultMinListRowHeight, 1)
 	}
 

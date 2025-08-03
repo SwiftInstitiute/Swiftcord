@@ -185,7 +185,26 @@ struct MessagesView: View {
             highlightMsgId: $viewModel.highlightMsg
         )
         .equatable()
-        .listRowBackground(msg.mentions(gateway.cache.user?.id) ? Color.orange.opacity(0.1) : .clear)
+        .listRowBackground(
+            Group {
+                if msg.mentions(gateway.cache.user?.id) {
+                    Color.orange.opacity(0.15)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+                        )
+                } else if viewModel.highlightMsg == msg.id {
+                    Color.blue.opacity(0.1)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.blue.opacity(0.4), lineWidth: 2)
+                        )
+                } else {
+                    Color.clear
+                }
+            }
+        )
+        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
         .onAppear {
             // Queue message for dynamic loading if not already loaded
             if !viewModel.loadedMessageIds.contains(msg.id) {

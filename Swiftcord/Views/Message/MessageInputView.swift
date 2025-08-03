@@ -38,7 +38,22 @@ struct MessageInputView: View {
 			replySection
 			inputSection
 		}
-		.background(.ultraThinMaterial)
+		.background(
+			LinearGradient(
+				colors: [
+					Color.black.opacity(0.1),
+					Color.black.opacity(0.05)
+				],
+				startPoint: .top,
+				endPoint: .bottom
+			)
+		)
+		.overlay(
+			Rectangle()
+				.frame(height: 1)
+				.foregroundColor(Color.gray.opacity(0.3))
+				.offset(y: -0.5)
+		)
 	}
 	
 	@ViewBuilder
@@ -60,8 +75,15 @@ struct MessageInputView: View {
 		}
 		.padding(.horizontal, 12)
 		.padding(.vertical, 8)
-		.background(.ultraThinMaterial)
-		.clipShape(RoundedRectangle(cornerRadius: 12))
+		.background(
+			RoundedRectangle(cornerRadius: 12)
+				.fill(.ultraThinMaterial)
+				.overlay(
+					RoundedRectangle(cornerRadius: 12)
+						.stroke(Color.gray.opacity(0.1), lineWidth: 0.5)
+				)
+		)
+		.shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
 	}
 	
 	@ViewBuilder
@@ -77,8 +99,21 @@ struct MessageInputView: View {
 			.textFieldStyle(PlainTextFieldStyle())
 			.padding(.horizontal, 12)
 			.padding(.vertical, 8)
-			.background(.ultraThinMaterial)
-			.clipShape(RoundedRectangle(cornerRadius: 8))
+			.background(
+				RoundedRectangle(cornerRadius: 8)
+					.fill(.ultraThinMaterial)
+					.overlay(
+						RoundedRectangle(cornerRadius: 8)
+							.stroke(Color.gray.opacity(0.1), lineWidth: 0.5)
+					)
+			)
+			.onSubmit {
+				if !message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+					onSend(message, attachments)
+					message = ""
+					attachments = []
+				}
+			}
 	}
 	
 	@ViewBuilder

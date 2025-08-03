@@ -225,8 +225,6 @@ struct CurrentUserFooter: View {
         }
         .frame(height: 52)
         .padding(.horizontal, 8)
-
-		.background(Color(nsColor: .controlBackgroundColor).opacity(0.5) as Color)
 		.sheet(isPresented: $switcherPresented) {
 			accountSwitcher()
 		}
