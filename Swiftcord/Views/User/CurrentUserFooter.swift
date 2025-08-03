@@ -81,48 +81,47 @@ struct CurrentUserFooter: View {
 		let curUserPresence = gateway.presences[user.id]?.status ?? .offline
 		let customStatus = gateway.presences[user.id]?.activities.first { $0.type == .custom }
 
-		HStack(spacing: 14) {
-			Button {
-				userPopoverPresented = true
-				AnalyticsWrapper.event(type: .openPopout, properties: [
-					"type": "User Status Menu",
-					"other_user_id": user.id
-				])
-			} label: {
-				HStack(spacing: 8) {
-					AvatarWithPresence(
-						avatarURL: user.avatarURL(),
-						presence: curUserPresence,
-						animate: false
-					)
-					.controlSize(.small)
-
-					VStack(alignment: .leading, spacing: 0) {
-						Text(user.username).font(.headline)
-						Group {
-							if let customStatus = customStatus {
-								Text(customStatus.state ?? "")
-							} else {
-								Text("#" + user.discriminator)
-							}
-						}.font(.system(size: 12)).opacity(0.75)
+			HStack(spacing: 14) {
+				Button {
+					userPopoverPresented = true
+					AnalyticsWrapper.event(type: .openPopout, properties: [
+						"type": "User Status Menu",
+						"other_user_id": user.id
+					])
+				} label: {
+					HStack(spacing: 8) {
+						AvatarWithPresence(
+							avatarURL: user.avatarURL(),
+							presence: curUserPresence,
+							animate: false
+						)
+						.controlSize(.small)
+						
+						VStack(alignment: .leading, spacing: 0) {
+							Text(user.username).font(.headline)
+							Group {
+								if let customStatus = customStatus {
+									Text(customStatus.state ?? "")
+										.lineLimit(1)
+										.truncationMode(.tail)
+								} else {
+									Text("#" + user.discriminator)
+								}
+							}.font(.system(size: 12)).opacity(0.75)
+						}
 					}
+					.padding(2)
+					.contentShape(Rectangle())
 				}
-				.padding(2)
-				.contentShape(Rectangle())
-			}
-			.buttonStyle(.plain)
-			.popover(isPresented: $userPopoverPresented) {
-				MiniUserProfileView(
-					user: User(from: user),
-					member: nil,
-					guildRoles: nil,
-					isWebhook: false,
-					loadError: false,
-					contentSlot: {
+				.buttonStyle(.plain)
+				.popover(isPresented: $userPopoverPresented) {
+					MiniUserProfileView(user: User(from: user), profile: .constant(UserProfile(
+						connected_accounts: [],
+						user: User(from: user)
+					))) {
 						VStack(spacing: 4) {
 							if !(user.bio?.isEmpty ?? true) { Divider() }
-
+							
 							// Set presence
 							Menu {
 								ForEach(Self.presences, id: \.icon) { (presence, icon) in
@@ -163,9 +162,9 @@ struct CurrentUserFooter: View {
 							.buttonStyle(FlatButtonStyle(outlined: true, text: true))
 							.controlSize(.small)
 							.disabled(settingPresence)
-
+							
 							Divider()
-
+							
 							Button {
 								switcherPresented = true
 								AnalyticsWrapper.event(type: .impressionAccountSwitcher)
@@ -177,24 +176,35 @@ struct CurrentUserFooter: View {
 							.controlSize(.small)
 						}
 					}
-				)
-			}
-
-			Spacer()
-
-			Button(action: {
-				if #available(macOS 13.0, *) {
-					NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-				} else {
-					NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
 				}
-			}, label: {
-				Image(systemName: "gearshape.fill")
-					.font(.system(size: 18))
-					.opacity(0.75)
-			})
-			.buttonStyle(.plain)
-			.frame(width: 32, height: 32)
+				
+				Spacer()
+				
+				if #available(macOS 14, *) {
+					SettingsLink {
+						Button(action: {}, label: {
+							Image(systemName: "gear")
+								.font(.system(size: 18))
+								.opacity(0.75)
+						})
+						.buttonStyle(.plain)
+						.frame(width: 32, height: 32)
+				}
+			} else {
+				Button(action: {
+					if #available(macOS 13.0, *) {
+						NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+					} else {
+						NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
+					}
+				}, label: {
+					Image(systemName: "gear")
+						.font(.system(size: 18))
+						.opacity(0.75)
+				})
+				.buttonStyle(.plain)
+				.frame(width: 32, height: 32)
+			}
 		}
 		.frame(height: 52)
 		.padding(.horizontal, 8)

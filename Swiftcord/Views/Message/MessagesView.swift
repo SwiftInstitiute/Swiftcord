@@ -5,6 +5,7 @@
 //  Created by Vincent Kwok on 23/2/22.
 //
 
+import Foundation
 import SwiftUI
 import DiscordKit
 import DiscordKitCore
@@ -12,21 +13,12 @@ import CachedAsyncImage
 import Introspect
 import Combine
 
+
 extension View {
     public func flip() -> some View {
         self
             .rotationEffect(.radians(.pi))
             .scaleEffect(x: -1, y: 1, anchor: .center)
-    }
-}
-
-extension View {
-    @ViewBuilder public func removeSeparator() -> some View {
-        if #available(macOS 13.0, *) {
-            self.listRowSeparator(.hidden).listSectionSeparator(.hidden)
-        } else {
-            self
-        }
     }
 }
 
@@ -134,9 +126,9 @@ struct UnreadDivider: View {
 struct MessagesView: View {
     @EnvironmentObject var gateway: DiscordGateway
     @EnvironmentObject var state: UIState
-    @EnvironmentObject var ctx: ServerContext
+    @EnvironmentObject var serverCtx: ServerContext
 
-    @StateObject var viewModel = MessagesViewModel()
+    @StateObject private var viewModel = MessagesViewModel()
 
     @State private var messageInputHeight: CGFloat = 0
 
@@ -185,7 +177,7 @@ struct MessagesView: View {
 
             cell(for: msg, shrunk: shrunk)
 
-            if !isLastItem, let channelID = ctx.channel?.id {
+            if !isLastItem, let channelID = serverCtx.channel?.id {
                 let newMsg = gateway.readState[channelID]?.last_message_id?.stringValue == viewModel.messages[idx+1].id
 
                 if newMsg { UnreadDivider() }
@@ -198,25 +190,23 @@ struct MessagesView: View {
                 DayDividerView(date: msg.timestamp)
             }
         }
+        .flip()
         .zeroRowInsets()
         .fixedSize(horizontal: false, vertical: true)
     }
-
-    @ViewBuilder
     private var historyList: some View {
         ScrollViewReader { proxy in
             List {
                 Spacer(minLength: max(messageInputHeight-44-7, 0) + (viewModel.showingInfoBar ? 24 : 0)).zeroRowInsets()
 
-                history.flip().removeSeparator()
+                history
 
                 if viewModel.reachedTop {
-                    MessagesViewHeader(chl: ctx.channel).zeroRowInsets().removeSeparator().flip()
+                    MessagesViewHeader(chl: serverCtx.channel).zeroRowInsets().flip()
                 } else {
                     loadingSkeleton
                         .zeroRowInsets()
                         .flip()
-                        .removeSeparator()
                         .onAppear { if viewModel.fetchMessagesTask == nil { fetchMoreMessages() } }
                         .onDisappear {
                             if let loadTask = viewModel.fetchMessagesTask {
@@ -242,36 +232,21 @@ struct MessagesView: View {
         }
     }
 
-    @ViewBuilder
-    private func inputContainer(channel: Channel) -> some View {
+    private var inputContainer: some View {
         ZStack(alignment: .topLeading) {
             MessageInfoBarView(isShown: $viewModel.showingInfoBar, state: $viewModel.infoBarData)
 
-            let hasSendPermission: Bool = {
-                guard let guildID = ctx.guild?.id else { return false }
-                guard !guildID.isDM else { return true }
-                guard let member = ctx.member else { return false }
-                return channel.computedPermissions(
-                    guildID: guildID, member: member, basePerms: ctx.basePermissions
-                )
-                .contains(.sendMessages)
-            }()
-
             MessageInputView(
-                placeholder: hasSendPermission ?
-                (channel.type == .dm
-                 ? "dm.composeMsg.hint \(channel.label(gateway.cache.users) ?? "")"
-                 : (channel.type == .groupDM
-                    ? "dm.group.composeMsg.hint \(channel.label(gateway.cache.users) ?? "")"
-                    : "server.composeMsg.hint \(channel.label(gateway.cache.users) ?? "")"
-                   )
-                )
-                : "You do not have permission to send messages in this channel.",
+                placeholder: serverCtx.channel?.type == .dm
+                ? "dm.composeMsg.hint \(serverCtx.channel?.label(gateway.cache.users) ?? "")"
+                : (serverCtx.channel?.type == .groupDM
+                    ? "dm.group.composeMsg.hint \(serverCtx.channel?.label(gateway.cache.users) ?? "")"
+                    : "server.composeMsg.hint \(serverCtx.channel?.label(gateway.cache.users) ?? "")"
+                ),
                 message: $viewModel.newMessage, attachments: $viewModel.attachments, replying: $viewModel.replying,
                 onSend: sendMessage,
                 preAttach: preAttachChecks
             )
-            .disabled(!hasSendPermission)
             .onAppear { viewModel.newMessage = "" }
             .onChange(of: viewModel.newMessage) { content in
                 if content.count > viewModel.newMessage.count,
@@ -279,19 +254,21 @@ struct MessagesView: View {
                     // Send typing start msg once every 8s while typing
                     viewModel.lastSentTyping = Date()
                     Task {
-                        _ = try? await restAPI.typingStart(id: channel.id)
+                        _ = try? await restAPI.typingStart(id: serverCtx.channel!.id)
                     }
                 }
             }
             .overlay {
-                let typingMembers = ctx.typingStarted[channel.id]?
-                    .map { $0.member?.nick ?? $0.member?.user?.displayName ?? "" } ?? []
+                let typingMembers = serverCtx.channel == nil
+                ? []
+                : serverCtx.typingStarted[serverCtx.channel!.id]?
+                    .map { $0.member?.nick ?? $0.member?.user!.username ?? "" } ?? []
 
                 if !typingMembers.isEmpty {
                     HStack {
                         // The dimensions are quite arbitrary
                         // FIXME: The animation broke, will have to fix it
-                        LottieView(name: "typing-animation", play: .constant(true), width: 160, height: 160)
+                        LottieView(name: "typing-animatiokn", play: .constant(true), width: 160, height: 160)
                             .lottieLoopMode(.loop)
                             .frame(width: 32, height: 24)
                         Group {
@@ -314,17 +291,7 @@ struct MessagesView: View {
     var body: some View {
         ZStack(alignment: .bottom) {
             historyList
-            if let channel = ctx.channel {
-                inputContainer(channel: channel)
-            }
-        }
-        // Blur the area behind the toolbar so the content doesn't show thru
-        .safeAreaInset(edge: .top) {
-            VStack {
-                Divider().frame(maxWidth: .infinity)
-            }
-            .frame(maxWidth: .infinity)
-            .background(.ultraThinMaterial)
+            inputContainer
         }
         .frame(minWidth: 525, minHeight: 500)
         // .blur(radius: viewModel.dropOver ? 8 : 0)
@@ -357,7 +324,7 @@ struct MessagesView: View {
             }
             return true
         }
-        .onChange(of: ctx.channel) { channel in
+        .onChange(of: serverCtx.channel) { channel in
             guard let channel = channel else { return }
             viewModel.messages = []
             // Prevent deadlocked and wrong message situations
@@ -390,20 +357,20 @@ struct MessagesView: View {
             evtID = gateway.onEvent.addHandler { evt in
                 switch evt {
                 case .messageCreate(let msg):
-                    if msg.channel_id == ctx.channel?.id {
+                    if msg.channel_id == serverCtx.channel?.id {
                         viewModel.addMessage(msg)
                     }
                     guard msg.webhook_id == nil else { break }
                     // Remove typing status after user sent a message
-                    ctx.typingStarted[msg.channel_id]?.removeAll { $0.user_id == msg.author.id }
+                    serverCtx.typingStarted[msg.channel_id]?.removeAll { $0.user_id == msg.author.id }
                 case .messageUpdate(let newMsg):
-                    guard newMsg.channel_id == ctx.channel?.id else { break }
+                    guard newMsg.channel_id == serverCtx.channel?.id else { break }
                     viewModel.updateMessage(newMsg)
                 case .messageDelete(let delMsg):
-                    guard delMsg.channel_id == ctx.channel?.id else { break }
+                    guard delMsg.channel_id == serverCtx.channel?.id else { break }
                     viewModel.deleteMessage(delMsg)
                 case .messageDeleteBulk(let delMsgs):
-                    guard delMsgs.channel_id == ctx.channel?.id else { break }
+                    guard delMsgs.channel_id == serverCtx.channel?.id else { break }
                     viewModel.deleteMessageBulk(delMsgs)
                 default: break
                 }
@@ -417,4 +384,118 @@ struct MessagesView: View {
             )
         }
     }
+}
+
+
+extension MessagesView {
+  func fetchMoreMessages() {
+    guard let channel = serverCtx.channel else { return }
+    if let oldTask = viewModel.fetchMessagesTask {
+      oldTask.cancel()
+      viewModel.fetchMessagesTask = nil
+    }
+    
+    if viewModel.loadError { viewModel.showingInfoBar = false }
+    viewModel.loadError = false
+    
+    viewModel.fetchMessagesTask = Task {
+      let lastMsg = viewModel.messages.last?.id
+      
+      guard let newMessages = try? await restAPI.getChannelMsgs(
+        id: channel.id,
+        before: lastMsg
+      ) else {
+        try Task.checkCancellation() // Check if the task is cancelled before continuing
+        
+        viewModel.fetchMessagesTask = nil
+        viewModel.loadError = true
+        viewModel.showingInfoBar = true
+        viewModel.infoBarData = InfoBarData(
+          message: "**Messages failed to load**",
+          buttonLabel: "Try again",
+          color: .red,
+          buttonIcon: "arrow.clockwise"
+        ) { fetchMoreMessages() }
+        state.loadingState = .messageLoad
+        return
+      }
+      state.loadingState = .messageLoad
+      try Task.checkCancellation()
+      
+      viewModel.reachedTop = newMessages.count < 50
+      viewModel.messages.append(contentsOf: newMessages)
+      viewModel.fetchMessagesTask = nil
+    }
+  }
+  
+  func sendMessage(with message: String, attachments: [URL]) {
+    viewModel.lastSentTyping = Date(timeIntervalSince1970: 0)
+    viewModel.newMessage = ""
+    viewModel.showingInfoBar = false
+    
+    // Create message reference if neccessary
+    var reference: MessageReference? {
+      if let replying = viewModel.replying {
+        viewModel.replying = nil // Make sure to clear that
+        return MessageReference(message_id: replying.messageID, guild_id: replying.guildID.isDM ? nil : replying.guildID)
+      } else { return nil }
+    }
+    var allowedMentions: AllowedMentions? {
+      if let replying = viewModel.replying {
+        return AllowedMentions(parse: [.user, .role, .everyone], replied_user: replying.ping)
+      } else { return nil }
+    }
+    
+    // Workaround for some race condition, no idea why clearing the message immediately doesn't
+    // successfully clear it
+    DispatchQueue.main.async { viewModel.newMessage = "" }
+    
+    Task {
+      do {
+        _ = try await restAPI.createChannelMsg(
+          message: NewMessage(
+            content: message,
+            allowed_mentions: allowedMentions,
+            message_reference: reference,
+            attachments: attachments.isEmpty ? nil : attachments.enumerated()
+              .map { (idx, attachment) in
+                NewAttachment(
+                  id: String(idx),
+                  filename: (try? attachment.resourceValues(forKeys: [URLResourceKey.nameKey]).name) ?? UUID().uuidString
+                )
+              }
+          ),
+          attachments: attachments,
+          id: serverCtx.channel!.id
+        )
+      } catch {
+        viewModel.showingInfoBar = true
+        viewModel.infoBarData = InfoBarData(
+          message: "Could not send message",
+          buttonLabel: "Try again",
+          color: .red,
+          buttonIcon: "arrow.clockwise",
+          clickHandler: { sendMessage(with: message, attachments: attachments) }
+        )
+      }
+    }
+  }
+  
+  func preAttachChecks(for attachment: URL) -> Bool {
+    guard let size = try? attachment.resourceValues(forKeys: [URLResourceKey.fileSizeKey]).fileSize, size < 8*1024*1024 else {
+      viewModel.newAttachmentErr = NewAttachmentError(
+        title: "Your files are too powerful",
+        message: "The max file size is 8MB."
+      )
+      return false
+    }
+    guard viewModel.attachments.count < 10 else {
+      viewModel.newAttachmentErr = NewAttachmentError(
+        title: "Too many uploads!",
+        message: "You can only upload 10 files at a time!"
+      )
+      return false
+    }
+    return true
+  }
 }

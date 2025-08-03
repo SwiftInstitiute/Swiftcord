@@ -13,6 +13,7 @@ import DiscordKitCore
 
 struct ContentView: View {
     @State private var loadingGuildID: Snowflake?
+    @State private var selectedGuild: Guild?
 
     @State private var presentingOnboarding = false
     @State private var presentingAddServer = false
@@ -30,26 +31,23 @@ struct ContentView: View {
 
     private let log = Logger(category: "ContentView")
 
-    private func makeDMGuild() -> PreloadedGuild {
-        PreloadedGuild(
+    private func makeDMGuild() -> Guild {
+        Guild(
+            id: "@me",
+            name: "DMs",
+            owner_id: "",
+            afk_timeout: 0,
+            verification_level: .none,
+            default_message_notifications: .all,
+            explicit_content_filter: .disabled,
+            roles: [], emojis: [], features: [],
+            mfa_level: .none,
+            system_channel_flags: 0,
             channels: gateway.cache.dms,
-            properties: Guild(
-                id: "@me",
-                name: "DMs",
-                owner_id: "",
-                afk_timeout: 0,
-                verification_level: .none,
-                default_message_notifications: .all,
-                explicit_content_filter: .disabled,
-                roles: [], emojis: [], features: [],
-                mfa_level: .none,
-                system_channel_flags: 0,
-                channels: gateway.cache.dms,
-                premium_tier: .none,
-                preferred_locale: .englishUS,
-                nsfw_level: .default,
-                premium_progress_bar_enabled: false
-            )
+            premium_tier: .none,
+            preferred_locale: .englishUS,
+            nsfw_level: .default,
+            premium_progress_bar_enabled: false
         )
     }
 
@@ -68,14 +66,14 @@ struct ContentView: View {
                 folder.guild_ids.contains(guild.id)
             }
         }
-        .sorted { lhs, rhs in lhs.joined_at > rhs.joined_at }
+        .sorted { lhs, rhs in lhs.joined_at! > rhs.joined_at! }
         .map { ServerListItem.guild($0) }
         return unsortedGuilds + gateway.guildFolders.compactMap { folder -> ServerListItem? in
             if folder.id != nil {
                 let guilds = folder.guild_ids.compactMap {
                     gateway.cache.guilds[$0]
                 }
-                let name = folder.name ?? String(guilds.map { $0.properties.name }.joined(separator: ", "))
+                let name = folder.name ?? String(guilds.map { $0.name }.joined(separator: ", "))
                 return .guildFolder(ServerFolder.GuildFolder(
                     name: name, guilds: guilds, color: folder.color.flatMap { Color(hex: $0) } ?? Color.accentColor
                 ))
@@ -94,64 +92,83 @@ struct ContentView: View {
             ScrollView(showsIndicators: false) {
                 LazyVStack(spacing: 8) {
                     ServerButton(
-                        selected: state.selectedGuildID == "@me",
-                        name: "Home",
-                        assetIconName: "DiscordIcon"
-                    ) {
-                        state.selectedGuildID = "@me"
-                    }
+                      selectedID: $state.selectedGuildID,
+                      guildID: .constant("@me"),
+                      name: .constant("Home"),
+                      serverIconURL: .constant(nil),
+                      systemIconName: .constant(nil),
+                      assetIconName: .constant("DiscordIcon")
+                    )
                     .padding(.top, 4)
 
                     HorizontalDividerView().frame(width: 32)
 
                     ForEach(self.serverListItems) { item in
                         switch item {
-                        case .guild(let guild):
-                            ServerButton(
-                                selected: state.selectedGuildID == guild.id || loadingGuildID == guild.id,
-                                name: guild.properties.name,
-                                serverIconURL: guild.properties.iconURL(),
+                          case .guild(let guild):
+                              ServerButton(
+                                selectedID: $state.selectedGuildID,
+                                guildID: .constant(guild.id),
+                                name: .constant(guild.name),
+                                serverIconURL: .constant(guild.icon != nil ? "\(DiscordKitConfig.default.cdnURL)icons/\(guild.id)/\(guild.icon!).webp?size=240" : nil),
+                                systemIconName: .constant(nil),
+                                assetIconName: .constant(nil),
                                 isLoading: loadingGuildID == guild.id
-                            ) {
-                                state.selectedGuildID = guild.id
-                            }
-                        case .guildFolder(let folder):
-                            ServerFolder(
+                              )
+                              .tag(guild.id)
+                          case .guildFolder(let folder):
+                              ServerFolder(
                                 folder: folder,
+                                open: state.selectedGuildID == folder.id || loadingGuildID == folder.id,
                                 selectedGuildID: $state.selectedGuildID,
                                 loadingGuildID: loadingGuildID
-                            )
+                              )
+                              .tag(folder.id)
                         }
                     }
 
                     ServerButton(
-                        selected: false,
-                        name: "Add a Server",
-                        systemIconName: "plus",
+                        selectedID: $state.selectedGuildID,
+                        guildID: .constant("+"),
+                        name: .constant("Add a Server"),
+                        serverIconURL: .constant(nil),
+                        systemIconName: .constant("plus"),
+                        assetIconName: .constant(nil),
                         bgColor: .green,
                         noIndicator: true
-                    ) {
-                        presentingAddServer = true
-                    }.padding(.bottom, 4)
+                    ).padding(.bottom, 4)
                 }
                 .padding(.bottom, 8)
                 .frame(width: 72)
             }
+            .background(
+                List {}
+                    .listStyle(.sidebar)
+                    .overlay(Color(nsColor: NSColor.controlBackgroundColor).opacity(0.5))
+            )
             .frame(maxHeight: .infinity, alignment: .top)
-            .background(VisualEffect()
-                .overlay(Color(nsColor: NSColor.controlBackgroundColor).opacity(0.5))
-            )
 
-            ServerView(
-                guild: state.selectedGuildID == nil
-                ? nil
-                : (state.selectedGuildID == "@me" ? makeDMGuild() : gateway.cache.guilds[state.selectedGuildID!]), serverCtx: state.serverCtx
-            )
+            ServerView(guild: $selectedGuild)
+              .onAppear()
+              {
+                guard let id = state.selectedGuildID else { selectedGuild = nil; return }
+                
+                selectedGuild = (id == "@me") ? makeDMGuild() : gateway.cache.guilds[id]
+              }
+        }
+        // Blur the area behind the toolbar so the content doesn't show thru
+        .safeAreaInset(edge: .top) {
+            VStack {
+                Divider().frame(maxWidth: .infinity)
+            }
+            .frame(maxWidth: .infinity)
+            .background(.ultraThinMaterial)
         }
         .environmentObject(audioManager)
         .onChange(of: state.selectedGuildID) { id in
             guard let id = id else { return }
             UserDefaults.standard.set(id.description, forKey: "lastSelectedGuild")
+            selectedGuild = (id == "@me") ? makeDMGuild() : gateway.cache.guilds[id]
         }
         .onChange(of: state.loadingState) { state in
             if state == .gatewayConn { loadLastSelectedGuild() }
@@ -212,7 +229,7 @@ struct ContentView: View {
     }
 
     private enum ServerListItem: Identifiable {
-        case guild(PreloadedGuild), guildFolder(ServerFolder.GuildFolder)
+        case guild(Guild), guildFolder(ServerFolder.GuildFolder)
 
         var id: String {
             switch self {

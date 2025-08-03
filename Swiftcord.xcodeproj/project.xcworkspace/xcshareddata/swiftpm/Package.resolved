@@ -1,5 +1,4 @@
 {
-  "originHash" : "edd5db299f57b15ff121868fd12db26a5d3e15a20d8a30a7c65eb8e076c612fc",
   "pins" : [
     {
       "identity" : "appcenter-sdk-apple",
@@ -7,16 +6,7 @@
       "location" : "https://github.com/microsoft/appcenter-sdk-apple",
       "state" : {
         "branch" : "develop",
-        "revision" : "307caacd16cd010ea3c8fca851584ba4815af667"
-      }
-    },
-    {
-      "identity" : "bitbytedata",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/tsolomko/BitByteData",
-      "state" : {
-        "revision" : "cdcdc5177ad536cfb11b95c620f926a81014b7fe",
-        "version" : "2.0.4"
+        "revision" : "2214f9ee2476f28af64cb38359defe59e85197a1"
       }
     },
     {
@@ -24,7 +14,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/SwiftcordApp/DiscordKit",
       "state" : {
-        "revision" : "2d42c69cafe592300a1a9d3a307bf485294026c7"
+        "branch" : "main",
+        "revision" : "dc16b007a5dbfdf008c51897257af36713e91c19"
       }
     },
     {
@@ -32,17 +23,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/airbnb/lottie-spm.git",
       "state" : {
-        "revision" : "04f2fd18cc9404a0a0917265a449002674f24ec9",
-        "version" : "4.5.2"
-      }
-    },
-    {
-      "identity" : "opencombine",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/OpenCombine/OpenCombine.git",
-      "state" : {
-        "revision" : "8576f0d579b27020beccbccc3ea6844f3ddfc2c2",
-        "version" : "0.14.0"
+        "revision" : "c3852816c622ad35a03ed39c187c1644ece2382b",
+        "version" : "4.1.3"
       }
     },
     {
@@ -50,8 +32,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/microsoft/PLCrashReporter.git",
       "state" : {
-        "revision" : "fec2ff791b27fd9b9ceab9072025dea56409cca1",
-        "version" : "1.11.3"
+        "revision" : "b1a342da19ed9b3af61ea2efa7656c2af30aeb7c",
+        "version" : "1.11.0"
       }
     },
     {
@@ -59,8 +41,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/ashleymills/Reachability.swift",
       "state" : {
-        "revision" : "21d1dc412cfecbe6e34f1f4c4eb88d3f912654a6",
-        "version" : "5.2.4"
+        "revision" : "c01bbdf2d633cf049ae1ed1a68a2020a8bda32e2",
+        "version" : "5.1.0"
       }
     },
     {
@@ -68,8 +50,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/getsentry/sentry-cocoa.git",
       "state" : {
-        "revision" : "156495496cb101e2f0a6b059f12dafcff1912197",
-        "version" : "8.54.0"
+        "revision" : "cf43eac1aa12017868c257ad3854ad87a5de0758",
+        "version" : "7.31.5"
       }
     },
     {
@@ -77,17 +59,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sparkle-project/Sparkle",
       "state" : {
-        "revision" : "df074165274afaa39539c05d57b0832620775b11",
-        "version" : "2.7.1"
-      }
-    },
-    {
-      "identity" : "swcompression",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/tsolomko/SWCompression.git",
-      "state" : {
-        "revision" : "390e0b0af8dd19a600005a242a89e570ff482e09",
-        "version" : "4.8.6"
+        "revision" : "dda155c7d3ef38c53d29f8584cb2aad2a1a54dba",
+        "version" : "2.3.2"
       }
     },
     {
@@ -95,26 +68,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-log.git",
       "state" : {
-        "revision" : "ce592ae52f982c847a4efc0dd881cc9eb32d29f2",
-        "version" : "1.6.4"
-      }
-    },
-    {
-      "identity" : "swift-nio",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-nio.git",
-      "state" : {
-        "revision" : "124119f0bb12384cef35aa041d7c3a686108722d",
-        "version" : "2.40.0"
-      }
-    },
-    {
-      "identity" : "swift-nio-ssl",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-nio-ssl.git",
-      "state" : {
-        "revision" : "1750873bce84b4129b5303655cce2c3d35b9ed3a",
-        "version" : "2.19.0"
+        "revision" : "32e8d724467f8fe623624570367e3d50c5638e46",
+        "version" : "1.5.2"
       }
     },
     {
@@ -122,8 +77,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-protobuf.git",
       "state" : {
-        "revision" : "102a647b573f60f73afdce5613a51d71349fe507",
-        "version" : "1.30.0"
+        "revision" : "0af9125c4eae12a4973fb66574c53a54962a9e1e",
+        "version" : "1.21.0"
       }
     },
     {
@@ -132,7 +87,7 @@
       "location" : "https://github.com/lorenzofiamingo/swiftui-cached-async-image",
       "state" : {
         "branch" : "main",
-        "revision" : "4f111f2b7aab7ec52a60716cedb673df5203743c"
+        "revision" : "f94be38411297c71aa8df69c6875127e6d8d7a92"
       }
     },
     {
@@ -140,8 +95,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/siteline/SwiftUI-Introspect.git",
       "state" : {
-        "revision" : "121c146fe591b1320238d054ae35c81ffa45f45a",
-        "version" : "0.12.0"
+        "revision" : "730ab9e6cdbb3122ad88277b295c4cecd284a311",
+        "version" : "0.9.1"
       }
     },
     {
@@ -152,16 +107,7 @@
         "branch" : "fix-timer-crash",
         "revision" : "32a6bd02c9c44c8cdd4e98f46037678ee1abecbb"
       }
-    },
-    {
-      "identity" : "websocket.swift",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/tesseract-one/WebSocket.swift.git",
-      "state" : {
-        "revision" : "9f616c35127c83651d3112f8bdb41284d3c5c213",
-        "version" : "0.2.0"
-      }
     }
   ],
-  "version" : 3
+  "version" : 2
 }

@@ -68,7 +68,6 @@
 		36429974286801C900483D0A /* Message+.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA32EF4F27C8D7E000A9ED72 /* Message+.swift */; };
 		36429975286801C900483D0A /* MediaControllerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAAFB5C4282AB37500807B54 /* MediaControllerView.swift */; };
 		36429976286801C900483D0A /* Double+.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAAFB5CB282B879200807B54 /* Double+.swift */; };
-		36429977286801C900483D0A /* MessagesView+.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA54D57B2845C36E00B11857 /* MessagesView+.swift */; };
 		36429978286801C900483D0A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA520AC827D3A55D009FD740 /* SettingsView.swift */; };
 		36429979286801C900483D0A /* UserAvatarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA32EF2727C633FE00A9ED72 /* UserAvatarView.swift */; };
 		3642997A286801C900483D0A /* View+.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA585C9827E1F6AC00FA4EE0 /* View+.swift */; };
@@ -89,7 +88,7 @@
 		3642998B286801C900483D0A /* SwiftcordApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA4A888727C0AF3000720909 /* SwiftcordApp.swift */; };
 		3642998D286801C900483D0A /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 36367144283C19E500A5CBE6 /* AVKit.framework */; };
 		3642998F286801C900483D0A /* CachedAsyncImage in Frameworks */ = {isa = PBXBuildFile; productRef = 36429933286801C900483D0A /* CachedAsyncImage */; };
-		36429991286801C900483D0A /* DiscordKitCommon in Frameworks */ = {isa = PBXBuildFile; productRef = 36429937286801C900483D0A /* DiscordKitCommon */; };
+		36429991286801C900483D0A /* DiscordKitCore in Frameworks */ = {isa = PBXBuildFile; productRef = 36429937286801C900483D0A /* DiscordKitCore */; };
 		36429993286801C900483D0A /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = 36429931286801C900483D0A /* Lottie */; };
 		36429994286801C900483D0A /* DiscordKit in Frameworks */ = {isa = PBXBuildFile; productRef = 36429935286801C900483D0A /* DiscordKit */; };
 		36429996286801C900483D0A /* discord-loading-animation.json in Resources */ = {isa = PBXBuildFile; fileRef = DAAFB5C8282B689000807B54 /* discord-loading-animation.json */; };
@@ -113,16 +112,12 @@
 		9FCE7B1D28C7140100213A3F /* ServerFolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FCE7B1C28C7140100213A3F /* ServerFolder.swift */; };
 		9FCE7B1E28C7140100213A3F /* ServerFolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FCE7B1C28C7140100213A3F /* ServerFolder.swift */; };
 		DA03DA3F284F1E9200257790 /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA03DA3E284F1E9200257790 /* Keychain.swift */; };
-		DA120C5D2ABF172600C9E7CE /* VisualEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA120C5C2ABF172600C9E7CE /* VisualEffect.swift */; };
-		DA120C5E2ABF172600C9E7CE /* VisualEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA120C5C2ABF172600C9E7CE /* VisualEffect.swift */; };
 		DA12FB7C29AB84F500EDBBEE /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = DA12FB7B29AB84F500EDBBEE /* Lottie */; };
 		DA2384A127CB9714009E15E0 /* Font+.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA2384A027CB9714009E15E0 /* Font+.swift */; };
 		DA2384BA27CBC2CE009E15E0 /* GintoBold.otf in Resources */ = {isa = PBXBuildFile; fileRef = DA2384B827CBC2CE009E15E0 /* GintoBold.otf */; };
 		DA2384BB27CBC2CE009E15E0 /* GintoMedium.otf in Resources */ = {isa = PBXBuildFile; fileRef = DA2384B927CBC2CE009E15E0 /* GintoMedium.otf */; };
 		DA2384BF27CCBB26009E15E0 /* EmbedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA2384BE27CCBB26009E15E0 /* EmbedView.swift */; };
 		DA2384C627CD1921009E15E0 /* LoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA2384C527CD1921009E15E0 /* LoadingView.swift */; };
-		DA251ED72ACF077F0030C845 /* User+displayName.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA251ED62ACF077F0030C845 /* User+displayName.swift */; };
-		DA251ED82ACF077F0030C845 /* User+displayName.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA251ED62ACF077F0030C845 /* User+displayName.swift */; };
 		DA264C1528C8852900FBB4B5 /* FlatMenuStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA264C1428C8852900FBB4B5 /* FlatMenuStyle.swift */; };
 		DA264C1728C89FE300FBB4B5 /* PresenceStatus+.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA264C1628C89FE300FBB4B5 /* PresenceStatus+.swift */; };
 		DA264C1A28C8E27E00FBB4B5 /* CustomStatusDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA264C1928C8E27E00FBB4B5 /* CustomStatusDialog.swift */; };
@@ -177,7 +172,6 @@
 		DA54D5762844B9C500B11857 /* CurrentUser+.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA54D5752844B9C500B11857 /* CurrentUser+.swift */; };
 		DA54D5782844DA1400B11857 /* UserSettingsProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA54D5772844DA1400B11857 /* UserSettingsProfileView.swift */; };
 		DA54D57A2844E41A00B11857 /* ProfileBadges.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA54D5792844E41A00B11857 /* ProfileBadges.swift */; };
-		DA54D57C2845C36E00B11857 /* MessagesView+.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA54D57B2845C36E00B11857 /* MessagesView+.swift */; };
 		DA54D57F28460F3A00B11857 /* ReferenceMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA54D57E28460F3A00B11857 /* ReferenceMessageView.swift */; };
 		DA57F44428056718001DC46E /* ChannelList.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA57F44328056718001DC46E /* ChannelList.swift */; };
 		DA57F44628065209001DC46E /* ChannelButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA57F44528065209001DC46E /* ChannelButton.swift */; };
@@ -188,8 +182,6 @@
 		DA7721FD2896BD4D0007BE26 /* URL+.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA7721FC2896BD4D0007BE26 /* URL+.swift */; };
 		DA7721FE2896BD4D0007BE26 /* URL+.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA7721FC2896BD4D0007BE26 /* URL+.swift */; };
 		DA8AEA6829029747007BAAEA /* Introspect in Frameworks */ = {isa = PBXBuildFile; productRef = DA8AEA6729029747007BAAEA /* Introspect */; };
-		DA9029572A0CC450008E05FA /* Permissions+.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA9029562A0CC450008E05FA /* Permissions+.swift */; };
-		DA9029582A0CC454008E05FA /* Permissions+.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA9029562A0CC450008E05FA /* Permissions+.swift */; };
 		DA91016C28BF8F1F00DD076B /* CreditsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAB1E46928A0A59500645FCD /* CreditsView.swift */; };
 		DA91017028C38E0400DD076B /* CurrentUserFooter+.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA91016F28C38E0400DD076B /* CurrentUserFooter+.swift */; };
 		DA91017128C38E0400DD076B /* CurrentUserFooter+.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA91016F28C38E0400DD076B /* CurrentUserFooter+.swift */; };
@@ -289,14 +281,12 @@
 		DA03DA3E284F1E9200257790 /* Keychain.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Keychain.swift; sourceTree = "<group>"; };
 		DA0FC06929AC385B00ADB012 /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/Localizable.strings; sourceTree = "<group>"; };
 		DA0FC06A29AC4B6900ADB012 /* pl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pl; path = pl.lproj/Localizable.strings; sourceTree = "<group>"; };
-		DA120C5C2ABF172600C9E7CE /* VisualEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisualEffect.swift; sourceTree = "<group>"; };
 		DA23843827CB934D009E15E0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		DA2384A027CB9714009E15E0 /* Font+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Font+.swift"; sourceTree = "<group>"; };
 		DA2384B827CBC2CE009E15E0 /* GintoBold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = GintoBold.otf; sourceTree = "<group>"; };
 		DA2384B927CBC2CE009E15E0 /* GintoMedium.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = GintoMedium.otf; sourceTree = "<group>"; };
 		DA2384BE27CCBB26009E15E0 /* EmbedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbedView.swift; sourceTree = "<group>"; };
 		DA2384C527CD1921009E15E0 /* LoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingView.swift; sourceTree = "<group>"; };
-		DA251ED62ACF077F0030C845 /* User+displayName.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "User+displayName.swift"; sourceTree = "<group>"; };
 		DA264C1428C8852900FBB4B5 /* FlatMenuStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlatMenuStyle.swift; sourceTree = "<group>"; };
 		DA264C1628C89FE300FBB4B5 /* PresenceStatus+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PresenceStatus+.swift"; sourceTree = "<group>"; };
 		DA264C1928C8E27E00FBB4B5 /* CustomStatusDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomStatusDialog.swift; sourceTree = "<group>"; };
@@ -351,7 +341,6 @@
 		DA54D5752844B9C500B11857 /* CurrentUser+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CurrentUser+.swift"; sourceTree = "<group>"; };
 		DA54D5772844DA1400B11857 /* UserSettingsProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSettingsProfileView.swift; sourceTree = "<group>"; };
 		DA54D5792844E41A00B11857 /* ProfileBadges.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileBadges.swift; sourceTree = "<group>"; usesTabs = 0; };
-		DA54D57B2845C36E00B11857 /* MessagesView+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MessagesView+.swift"; sourceTree = "<group>"; };
 		DA54D57E28460F3A00B11857 /* ReferenceMessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReferenceMessageView.swift; sourceTree = "<group>"; };
 		DA57F44328056718001DC46E /* ChannelList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelList.swift; sourceTree = "<group>"; };
 		DA57F44528065209001DC46E /* ChannelButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelButton.swift; sourceTree = "<group>"; };
@@ -360,7 +349,6 @@
 		DA6E89EF2876BC7E00BB05E7 /* AppSettingsAdvancedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettingsAdvancedView.swift; sourceTree = "<group>"; };
 		DA7720CF283F184100D3C335 /* NavigationCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationCommands.swift; sourceTree = "<group>"; };
 		DA7721FC2896BD4D0007BE26 /* URL+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "URL+.swift"; sourceTree = "<group>"; };
-		DA9029562A0CC450008E05FA /* Permissions+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Permissions+.swift"; sourceTree = "<group>"; };
 		DA91016F28C38E0400DD076B /* CurrentUserFooter+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CurrentUserFooter+.swift"; sourceTree = "<group>"; };
 		DA91017228C38EA300DD076B /* AccountRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountRow.swift; sourceTree = "<group>"; };
 		DA91017528C3989E00DD076B /* AccountMeta.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountMeta.swift; sourceTree = "<group>"; };
@@ -431,7 +419,7 @@
 				3642998F286801C900483D0A /* CachedAsyncImage in Frameworks */,
 				364299A62868042F00483D0A /* AppCenterAnalytics in Frameworks */,
 				DAA0A57628B90DE6007D8351 /* Sentry in Frameworks */,
-				36429991286801C900483D0A /* DiscordKitCommon in Frameworks */,
+				36429991286801C900483D0A /* DiscordKitCore in Frameworks */,
 				36429993286801C900483D0A /* Lottie in Frameworks */,
 				DAA0A57128B90C7B007D8351 /* SwiftyGif in Frameworks */,
 				36429994286801C900483D0A /* DiscordKit in Frameworks */,
@@ -677,7 +665,6 @@
 				DA520ACA27D4A23A009FD740 /* String+.swift */,
 				DA585C9827E1F6AC00FA4EE0 /* View+.swift */,
 				13A79FBF298C41C800D19AAB /* View+KeyDown.swift */,
-				DA54D57B2845C36E00B11857 /* MessagesView+.swift */,
 				DA2BD30D284CCC9800EBB8D6 /* Text+.swift */,
 				DAB5366F285B693700DD9857 /* AnyTransition+.swift */,
 				366BAA8B286D322600B662EA /* Array+.swift */,
@@ -758,7 +745,6 @@
 				DAAFB5BB282A570D00807B54 /* CircularProgressView.swift */,
 				DA4350032879C38C001DEC81 /* HorizontalDividerView.swift */,
 				DAB1E46B28A10BB100645FCD /* BetterImageView.swift */,
-				DA120C5C2ABF172600C9E7CE /* VisualEffect.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -841,8 +827,6 @@
 				DA32EF5127C8FBB200A9ED72 /* User+.swift */,
 				DA54D5752844B9C500B11857 /* CurrentUser+.swift */,
 				DAC437782900F3FD00D3A894 /* Snowflake+.swift */,
-				DA9029562A0CC450008E05FA /* Permissions+.swift */,
-				DA251ED62ACF077F0030C845 /* User+displayName.swift */,
 			);
 			path = DiscordAPI;
 			sourceTree = "<group>";
@@ -919,7 +903,7 @@
 				36429931286801C900483D0A /* Lottie */,
 				36429933286801C900483D0A /* CachedAsyncImage */,
 				36429935286801C900483D0A /* DiscordKit */,
-				36429937286801C900483D0A /* DiscordKitCommon */,
+				36429937286801C900483D0A /* DiscordKitCore */,
 				364299A52868042F00483D0A /* AppCenterAnalytics */,
 				DAA0A57028B90C7B007D8351 /* SwiftyGif */,
 				DAA0A57528B90DE6007D8351 /* Sentry */,
@@ -966,7 +950,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1320;
-				LastUpgradeCheck = 1500;
+				LastUpgradeCheck = 1410;
 				TargetAttributes = {
 					DA4A888327C0AF3000720909 = {
 						CreatedOnToolsVersion = 13.2.1;
@@ -1058,8 +1042,6 @@
 			inputFileListPaths = (
 			);
 			inputPaths = (
-				"$(SRCROOT)/.swiftlint.yml",
-				"$(SRCROOT)/**",
 			);
 			outputFileListPaths = (
 			);
@@ -1071,14 +1053,12 @@
 		};
 		DAA0A57728B912AE007D8351 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputFileListPaths = (
 			);
 			inputPaths = (
-				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${TARGET_NAME}",
 			);
 			outputFileListPaths = (
 			);
@@ -1086,7 +1066,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ \"${CONFIGURATION}\" != \"Debug\" ]; then\n    if which sentry-cli >/dev/null; then\n        export SENTRY_ORG=swiftcord\n        export SENTRY_PROJECT=swiftcord\n        export SENTRY_AUTH_TOKEN=\"${SENTRY_API_TOKEN}\"\n        ERROR=$(sentry-cli upload-dif \"$DWARF_DSYM_FOLDER_PATH\" --force-foreground 2>&1 >/dev/null)\n        if [ ! $? -eq 0 ]; then\n            echo \"error: sentry-cli - $ERROR\"\n        fi\n    else\n        echo \"warning: sentry-cli not installed, download from https://github.com/getsentry/sentry-cli/releases\"\n    fi\nfi\n";
+			shellScript = "if [ \"${CONFIGURATION}\" != \"Release\" ]; then\n    if which sentry-cli >/dev/null; then\n        export SENTRY_ORG=swiftcord\n        export SENTRY_PROJECT=swiftcord\n        export SENTRY_AUTH_TOKEN=\"${SENTRY_API_TOKEN}\"\n        ERROR=$(sentry-cli upload-dif \"$DWARF_DSYM_FOLDER_PATH\" --force-foreground 2>&1 >/dev/null)\n        if [ ! $? -eq 0 ]; then\n            echo \"error: sentry-cli - $ERROR\"\n        fi\n    else\n        echo \"warning: sentry-cli not installed, download from https://github.com/getsentry/sentry-cli/releases\"\n    fi\nfi\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -1096,7 +1076,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DA120C5E2ABF172600C9E7CE /* VisualEffect.swift in Sources */,
 				9FCE7B1E28C7140100213A3F /* ServerFolder.swift in Sources */,
 				DA91017728C3989E00DD076B /* AccountMeta.swift in Sources */,
 				DAB1E48828A50D3600645FCD /* DefaultMessageView.swift in Sources */,
@@ -1138,7 +1117,6 @@
 				36429958286801C900483D0A /* AppSettingsView.swift in Sources */,
 				36429959286801C900483D0A /* WebView.swift in Sources */,
 				3642995A286801C900483D0A /* DebugSettingsView.swift in Sources */,
-				DA251ED82ACF077F0030C845 /* User+displayName.swift in Sources */,
 				3642995B286801C900483D0A /* LoginView.swift in Sources */,
 				3642995C286801C900483D0A /* UIStateEnv.swift in Sources */,
 				3642995D286801C900483D0A /* MessageView.swift in Sources */,
@@ -1178,7 +1156,6 @@
 				36429975286801C900483D0A /* MediaControllerView.swift in Sources */,
 				36429976286801C900483D0A /* Double+.swift in Sources */,
 				DA4350002876F67F001DEC81 /* AppSettingsAdvancedView.swift in Sources */,
-				36429977286801C900483D0A /* MessagesView+.swift in Sources */,
 				36429978286801C900483D0A /* SettingsView.swift in Sources */,
 				36429979286801C900483D0A /* UserAvatarView.swift in Sources */,
 				3642997A286801C900483D0A /* View+.swift in Sources */,
@@ -1200,7 +1177,6 @@
 				36429989286801C900483D0A /* UserSettingsProfileView.swift in Sources */,
 				DA91017A28C4726300DD076B /* AccountSwitcher.swift in Sources */,
 				3642998A286801C900483D0A /* ServerView.swift in Sources */,
-				DA9029582A0CC454008E05FA /* Permissions+.swift in Sources */,
 				3642998B286801C900483D0A /* SwiftcordApp.swift in Sources */,
 				368B6730287A20F800E37B33 /* ServerJoinView.swift in Sources */,
 			);
@@ -1256,7 +1232,6 @@
 				DA57F44628065209001DC46E /* ChannelButton.swift in Sources */,
 				DA32EF6627CB772300A9ED72 /* CacheModel.xcdatamodeld in Sources */,
 				03A188C02A0FDB8A00D5F4BC /* MessageStickerView.swift in Sources */,
-				DA251ED72ACF077F0030C845 /* User+displayName.swift in Sources */,
 				E7AF1C33282FB02A001F78DF /* UserSettingsAccount.swift in Sources */,
 				DA520AE227D76BEB009FD740 /* Bool+.swift in Sources */,
 				03A188BE2A0FDB7500D5F4BC /* BasicStickerView.swift in Sources */,
@@ -1288,14 +1263,12 @@
 				DAB1E46C28A10BB100645FCD /* BetterImageView.swift in Sources */,
 				DAA57E242892270800C9A931 /* SwiftyGifNSView.swift in Sources */,
 				9FCE7B1D28C7140100213A3F /* ServerFolder.swift in Sources */,
-				DA9029572A0CC450008E05FA /* Permissions+.swift in Sources */,
 				DA2BD30C284CB38B00EBB8D6 /* AppSettingsAppearanceView.swift in Sources */,
 				DAAFB5C3282AA5C700807B54 /* MessageInfoBarView.swift in Sources */,
 				DA32EF5027C8D7E000A9ED72 /* Message+.swift in Sources */,
 				DAAFB5C5282AB37500807B54 /* MediaControllerView.swift in Sources */,
 				DAAFB5CC282B879200807B54 /* Double+.swift in Sources */,
 				366BAA8C286D322600B662EA /* Array+.swift in Sources */,
-				DA54D57C2845C36E00B11857 /* MessagesView+.swift in Sources */,
 				DA520AC927D3A55D009FD740 /* SettingsView.swift in Sources */,
 				DA32EF2827C633FE00A9ED72 /* UserAvatarView.swift in Sources */,
 				DA585C9927E1F6AC00FA4EE0 /* View+.swift in Sources */,
@@ -1316,7 +1289,6 @@
 				DA91017628C3989E00DD076B /* AccountMeta.swift in Sources */,
 				DABD8BB72882E9E0008EE28F /* DateFormatter+.swift in Sources */,
 				DA32EF3227C676FE00A9ED72 /* LottieLoopMode.swift in Sources */,
-				DA120C5D2ABF172600C9E7CE /* VisualEffect.swift in Sources */,
 				DAFD4710289A1FEB0075D71B /* AttachmentAudio.swift in Sources */,
 				DA28027F28095E3100B14E5C /* Logger+.swift in Sources */,
 				DA54D574284497E400B11857 /* ProfileAccentMask.swift in Sources */,
@@ -1363,7 +1335,6 @@
 			baseConfigurationReference = 900F6D9F284A1AE6000B6D29 /* Project Release.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
@@ -1399,7 +1370,6 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -1428,14 +1398,12 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 18;
+				CURRENT_PROJECT_VERSION = 16;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"Swiftcord/Preview Content\"";
-				DEVELOPMENT_TEAM = Q382QLKDG3;
-				ENABLE_APP_SANDBOX = YES;
+				DEVELOPMENT_TEAM = UQ9J5QT9DL;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Swiftcord/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Swiftcord;
@@ -1446,7 +1414,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
-				MARKETING_VERSION = 0.7.1;
+				MARKETING_VERSION = 0.6.1;
 				PRODUCT_BUNDLE_IDENTIFIER = io.cryptoalgo.swiftcord;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = APP_STORE;
@@ -1560,7 +1528,6 @@
 			baseConfigurationReference = 900F6D9E284A1ADE000B6D29 /* Project Debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
@@ -1596,7 +1563,6 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -1627,7 +1593,6 @@
 			baseConfigurationReference = 900F6D9F284A1AE6000B6D29 /* Project Release.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
@@ -1663,7 +1628,6 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -1692,14 +1656,12 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 18;
+				CURRENT_PROJECT_VERSION = 16;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"Swiftcord/Preview Content\"";
-				DEVELOPMENT_TEAM = Q382QLKDG3;
-				ENABLE_APP_SANDBOX = YES;
+				DEVELOPMENT_TEAM = UQ9J5QT9DL;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Swiftcord/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Swiftcord;
@@ -1710,7 +1672,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
-				MARKETING_VERSION = 0.7.1;
+				MARKETING_VERSION = 0.6.1;
 				PRODUCT_BUNDLE_IDENTIFIER = io.cryptoalgo.swiftcord;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -1728,14 +1690,12 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 18;
+				CURRENT_PROJECT_VERSION = 16;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"Swiftcord/Preview Content\"";
-				DEVELOPMENT_TEAM = Q382QLKDG3;
-				ENABLE_APP_SANDBOX = YES;
+				DEVELOPMENT_TEAM = UQ9J5QT9DL;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Swiftcord/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Swiftcord;
@@ -1746,7 +1706,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
-				MARKETING_VERSION = 0.7.1;
+				MARKETING_VERSION = 0.6.1;
 				PRODUCT_BUNDLE_IDENTIFIER = io.cryptoalgo.swiftcord;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -1834,8 +1794,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/SwiftcordApp/DiscordKit";
 			requirement = {
-				kind = revision;
-				revision = 2d42c69cafe592300a1a9d3a307bf485294026c7;
+				branch = main;
+				kind = branch;
 			};
 		};
 		DA8AEA6629029747007BAAEA /* XCRemoteSwiftPackageReference "SwiftUI-Introspect" */ = {
@@ -1859,7 +1819,7 @@
 			repositoryURL = "https://github.com/getsentry/sentry-cocoa.git";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 8.54.0;
+				minimumVersion = 7.0.0;
 			};
 		};
 		DAB1E46D28A202B900645FCD /* XCRemoteSwiftPackageReference "swiftui-cached-async-image" */ = {
@@ -1896,10 +1856,10 @@
 			package = 36429936286801C900483D0A /* XCRemoteSwiftPackageReference "DiscordKit" */;
 			productName = DiscordKit;
 		};
-		36429937286801C900483D0A /* DiscordKitCommon */ = {
+		36429937286801C900483D0A /* DiscordKitCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 36429936286801C900483D0A /* XCRemoteSwiftPackageReference "DiscordKit" */;
-			productName = DiscordKitCommon;
+			productName = DiscordKitCore;
 		};
 		364299A52868042F00483D0A /* AppCenterAnalytics */ = {
 			isa = XCSwiftPackageProductDependency;
