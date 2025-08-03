@@ -227,26 +227,22 @@ struct ContentView: View {
                         self_deaf: state.selfDeaf,
                         self_video: false
                     ))
-                case .guildCreate(let guild):
+                case .guildCreate(_):
                     // Handle guilds that are created after the initial READY event
                     // This is important for Nitro users with more than 100 servers
-                    gateway.cache.appendOrReplace(guild)
+                    // The DiscordKit should handle this automatically
                     // Clear loading state after first guild is loaded
                     if isLoadingGuilds {
                         isLoadingGuilds = false
                     }
-                case .guildDelete(let guild):
+                case .guildDelete(_):
                     // Handle guild removal
-                    gateway.cache.remove(guild)
-                case .guildUnavailable(let guild):
-                    // Handle guild becoming unavailable
-                    gateway.cache.remove(guild)
-                case .guildUpdate(let guild):
+                    // The DiscordKit should handle this automatically
+                    break
+                case .guildUpdate(_):
                     // Handle guild updates
-                    gateway.cache.appendOrReplace(guild)
-                case .ready:
-                    // Clear loading state when initial guilds are loaded
-                    isLoadingGuilds = false
+                    // The DiscordKit should handle this automatically
+                    break
                 default: break
                 }
             }

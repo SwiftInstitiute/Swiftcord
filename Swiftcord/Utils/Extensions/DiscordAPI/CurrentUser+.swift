@@ -16,4 +16,22 @@ extension CurrentUser {
 			return URL(string: "\(DiscordKitConfig.default.cdnURL)embed/avatars/\((Int(self.discriminator) ?? 0) % 5).png")!
 		}
 	}
+    
+    var displayName: String {
+        global_name ?? username
+    }
+    
+    /// Returns the username with discriminator only if discriminator is not "0"
+    var displayNameWithDiscriminator: String {
+        if discriminator == "0" {
+            return username
+        } else {
+            return "\(username)#\(discriminator)"
+        }
+    }
+    
+    /// Returns the full username with discriminator for copying purposes
+    var fullUsername: String {
+        "\(username)#\(discriminator)"
+    }
 }

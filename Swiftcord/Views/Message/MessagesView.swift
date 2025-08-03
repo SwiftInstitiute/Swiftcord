@@ -219,6 +219,7 @@ struct MessagesView: View {
 
                 Spacer(minLength: 52).zeroRowInsets() // Ensure content is fully visible and not hidden behind toolbar when scrolled to the top
             }
+            .listStyle(PlainListStyle())
             .introspectTableView { tableView in
                 tableView.backgroundColor = .clear
                 tableView.enclosingScrollView!.drawsBackground = false
@@ -233,59 +234,79 @@ struct MessagesView: View {
         }
     }
 
+    private var messageInputPlaceholder: LocalizedStringKey {
+        if serverCtx.channel?.type == .dm {
+            return LocalizedStringKey("dm.composeMsg.hint \(serverCtx.channel?.label(gateway.cache.users) ?? "")")
+        } else if serverCtx.channel?.type == .groupDM {
+            return LocalizedStringKey("dm.group.composeMsg.hint \(serverCtx.channel?.label(gateway.cache.users) ?? "")")
+        } else {
+            return LocalizedStringKey("server.composeMsg.hint \(serverCtx.channel?.label(gateway.cache.users) ?? "")")
+        }
+    }
+    
+    private var typingMembers: [String] {
+        if serverCtx.channel == nil {
+            return []
+        } else {
+            return serverCtx.typingStarted[serverCtx.channel!.id]?
+                .map { $0.member?.nick ?? $0.member?.user!.displayName ?? "" } ?? []
+        }
+    }
+    
+    private var typingOverlay: some View {
+        Group {
+            if !typingMembers.isEmpty {
+                HStack {
+                    // The dimensions are quite arbitrary
+                    // FIXME: The animation broke, will have to fix it
+                    LottieView(name: "typing-animatiokn", play: .constant(true), width: 160, height: 160)
+                        .lottieLoopMode(.loop)
+                        .frame(width: 32, height: 24)
+                    Group {
+                        Text(
+                            typingMembers.count <= 2
+                            ? typingMembers.joined(separator: " and ")
+                            : "Several people"
+                        ).fontWeight(.semibold)
+                        + Text(" \(typingMembers.count == 1 ? "is" : "are") typing...")
+                    }.padding(.leading, -4)
+                }
+                .padding(.horizontal, 16)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+            } else {
+                EmptyView()
+            }
+        }
+    }
+
+    private var messageInputView: some View {
+        MessageInputView(
+            placeholder: messageInputPlaceholder,
+            message: $viewModel.newMessage, 
+            attachments: $viewModel.attachments, 
+            replying: $viewModel.replying,
+            onSend: sendMessage,
+            preAttach: preAttachChecks
+        )
+        .onAppear { viewModel.newMessage = "" }
+        .onChange(of: viewModel.newMessage) { content in
+            if content.count > viewModel.newMessage.count,
+               Date().timeIntervalSince(viewModel.lastSentTyping) > 8 { // swiftlint:disable:this indentation_width
+                // Send typing start msg once every 8s while typing
+                viewModel.lastSentTyping = Date()
+                Task {
+                    _ = try? await restAPI.typingStart(id: serverCtx.channel!.id)
+                }
+            }
+        }
+        .overlay(typingOverlay)
+        .heightReader($messageInputHeight)
+    }
+
     private var inputContainer: some View {
         ZStack(alignment: .topLeading) {
             MessageInfoBarView(isShown: $viewModel.showingInfoBar, state: $viewModel.infoBarData)
-
-            MessageInputView(
-                placeholder: serverCtx.channel?.type == .dm
-                ? "dm.composeMsg.hint \(serverCtx.channel?.label(gateway.cache.users) ?? "")"
-                : (serverCtx.channel?.type == .groupDM
-                    ? "dm.group.composeMsg.hint \(serverCtx.channel?.label(gateway.cache.users) ?? "")"
-                    : "server.composeMsg.hint \(serverCtx.channel?.label(gateway.cache.users) ?? "")"
-                ),
-                message: $viewModel.newMessage, attachments: $viewModel.attachments, replying: $viewModel.replying,
-                onSend: sendMessage,
-                preAttach: preAttachChecks
-            )
-            .onAppear { viewModel.newMessage = "" }
-            .onChange(of: viewModel.newMessage) { content in
-                if content.count > viewModel.newMessage.count,
-                   Date().timeIntervalSince(viewModel.lastSentTyping) > 8 { // swiftlint:disable:this indentation_width
-                    // Send typing start msg once every 8s while typing
-                    viewModel.lastSentTyping = Date()
-                    Task {
-                        _ = try? await restAPI.typingStart(id: serverCtx.channel!.id)
-                    }
-                }
-            }
-            .overlay {
-                let typingMembers = serverCtx.channel == nil
-                ? []
-                : serverCtx.typingStarted[serverCtx.channel!.id]?
-                    .map { $0.member?.nick ?? $0.member?.user!.displayName ?? "" } ?? []
-
-                if !typingMembers.isEmpty {
-                    HStack {
-                        // The dimensions are quite arbitrary
-                        // FIXME: The animation broke, will have to fix it
-                        LottieView(name: "typing-animatiokn", play: .constant(true), width: 160, height: 160)
-                            .lottieLoopMode(.loop)
-                            .frame(width: 32, height: 24)
-                        Group {
-                            Text(
-                                typingMembers.count <= 2
-                                ? typingMembers.joined(separator: " and ")
-                                : "Several people"
-                            ).fontWeight(.semibold)
-                            + Text(" \(typingMembers.count == 1 ? "is" : "are") typing...")
-                        }.padding(.leading, -4)
-                    }
-                    .padding(.horizontal, 16)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
-                }
-            }
-            .heightReader($messageInputHeight)
+            messageInputView
         }
     }
 
@@ -319,7 +340,9 @@ struct MessagesView: View {
             for provider in providers {
                 _ = provider.loadObject(ofClass: URL.self) { itemURL, err in
                     if let itemURL = itemURL, preAttachChecks(for: itemURL) {
-                        viewModel.attachments.append(itemURL)
+                        Task { @MainActor in
+                            viewModel.attachments.append(itemURL)
+                        }
                     }
                 }
             }
