@@ -494,6 +494,7 @@ extension MessagesView {
       
       viewModel.reachedTop = newMessages.count < 50
       viewModel.messages.append(contentsOf: newMessages)
+      viewModel.messages.sort { $0.timestamp < $1.timestamp }
       viewModel.fetchMessagesTask = nil
     }
   }
