@@ -160,9 +160,10 @@ struct ServerView: View {
       }
       .environmentObject(serverCtx)
       .navigationTitle("")
+      .background(Color(NSColor.controlBackgroundColor))
       .toolbar {
         ToolbarItemGroup(placement: .navigation) {
-          HStack {
+          HStack(spacing: 8) {
             Button {
               NSApp.keyWindow?.firstResponder?.tryToPerform(#selector(NSSplitViewController.toggleSidebar(_:)), with: nil)
             } label: {
@@ -172,13 +173,26 @@ struct ServerView: View {
                 : (serverCtx.channel?.type == .groupDM ? "person.2.fill" : "number")
               ).foregroundColor(.primary.opacity(0.8))
             }
+            .buttonStyle(.plain)
+            .frame(width: 20, height: 20)
+            
             Text(serverCtx.channel?.label(gateway.cache.users) ?? "No Channel")
               .font(.title2)
+              .fontWeight(.semibold)
           }
         }
-        ToolbarItem(placement: .navigation) {
-          Button(action: { mediaCenterOpen = true }, label: { Image(systemName: "play.circle") })
-            .popover(isPresented: $mediaCenterOpen) { MediaControllerView() }
+        
+        ToolbarItemGroup(placement: .primaryAction) {
+          HStack(spacing: 8) {
+            Button {
+              // Play button action
+            } label: {
+              Image(systemName: "play.fill")
+                .foregroundColor(.primary.opacity(0.8))
+            }
+            .buttonStyle(.plain)
+            .frame(width: 20, height: 20)
+          }
         }
       }
       .onChange(of: audioManager.queue.count) { [oldCount = audioManager.queue.count] count in
