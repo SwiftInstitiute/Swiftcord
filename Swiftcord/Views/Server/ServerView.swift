@@ -205,6 +205,14 @@ struct ServerView: View {
           .background(Color(NSColor.controlBackgroundColor))
           .cornerRadius(8)
         }
+        
+        ToolbarItemGroup(placement: .navigation) {
+          Spacer()
+        }
+        
+        ToolbarItem(placement: .navigation) {
+          Button(action: { mediaCenterOpen = true }, label: { Image(systemName: "play.circle") })
+            .popover(isPresented: $mediaCenterOpen) { MediaControllerView() }
       }
       .onChange(of: audioManager.queue.count) { [oldCount = audioManager.queue.count] count in
         if count > oldCount { mediaCenterOpen = true }
@@ -257,4 +265,5 @@ struct ServerView: View {
       .background(Color(NSColor.controlBackgroundColor))
     }
   }
+}
 }

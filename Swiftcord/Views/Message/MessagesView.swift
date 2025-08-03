@@ -224,6 +224,7 @@ struct MessagesView: View {
                 tableView.enclosingScrollView!.drawsBackground = false
                 tableView.enclosingScrollView!.scrollerInsets = NSEdgeInsets(top: 0, left: 0, bottom: 52, right: 0)
             }
+            .scaleEffect(x: -1, y: 1, anchor: .center)
             .frame(maxHeight: .infinity)
             .padding(.bottom, 24 + 7) // Ensure List doesn't go below text input field (and its border radius)
         }
