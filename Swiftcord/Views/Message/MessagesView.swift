@@ -270,7 +270,7 @@ struct MessagesView: View {
             }
             .environment(\.defaultMinListRowHeight, 1) // By SwiftUI's logic, 0 is negative so we use 1 instead
             .background(.clear)
-            .padding(.top, 74) // Ensure List doesn't go below text input field (and its border radius)
+            .padding(.bottom, 50)
             .allowsHitTesting(true)
             .introspectTableView { tableView in
                 tableView.enclosingScrollView!.drawsBackground = false
