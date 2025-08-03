@@ -28,13 +28,13 @@ struct DefaultMessageView: View {
 				: message.content
 				Group {
 					Text(markdown: msg)
-						.font(.system(size: message.content.containsOnlyEmojiAndSpaces ? 48 : 15))
+						.font(message.content.containsOnlyEmojiAndSpaces ? .system(size: 48) : .appMessage)
 					+ Text(
 						message.edited_timestamp != nil && shrunk
 						? "message.edited.shrunk"
 						: ""
 					)
-					.font(.system(size: 8))
+					.font(.footnote)
 					.italic()
 					.foregroundColor(Color(NSColor.textColor).opacity(0.4))
 				}

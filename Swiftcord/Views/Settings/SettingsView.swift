@@ -208,6 +208,15 @@ private extension SettingsView {
 							UserSettingsProfileView(user: user)
 						case .privacy:
 							UserSettingsPrivacySafetyView()
+						// MARK: Text and Images
+						case .textImages:
+							AppSettingsTextAndImagesView()
+						// MARK: Misc
+						case .about:
+							AboutSwiftcordView()
+						case .credits:
+							CreditsView()
+						// MARK: Developer
 						case .advanced:
 							AppSettingsAdvancedView()
 						case .credits:

@@ -19,7 +19,7 @@ struct NonUserBadge: View {
 		HStack(spacing: 0) {
 			if let flags = flags, flags.contains(.verifiedBot) {
 				Image(systemName: "checkmark")
-					.font(.system(size: 8, weight: .heavy))
+                    .font(.footnote.weight(.heavy))
 					.frame(width: 15)
 					.padding(.leading, -3)
 			}
@@ -84,7 +84,7 @@ struct MessageView: View, Equatable {
                         UserAvatarView(user: message.author, guildID: serverCtx.guild!.id, webhookID: message.webhook_id)
                     } else {
 						Text(message.timestamp, style: .time)
-                            .font(.system(size: 8, weight: .semibold, design: .monospaced))
+                            .font(.footnote.weight(.semibold).monospaced())
                             .frame(width: 40, height: 22, alignment: .center)
                             .opacity(hovered ? 0.5 : 0)
                     }
@@ -92,7 +92,7 @@ struct MessageView: View, Equatable {
                         if !shrunk {
                             HStack(spacing: 6) {
                                 Text(message.member?.nick ?? message.author.displayName)
-                                    .font(.system(size: 15))
+                                    .font(.title3)
                                     .fontWeight(.medium)
 								if message.author.bot ?? false || message.webhook_id != nil {
 									// No idea what's the difference between flags and public_flags,
@@ -109,7 +109,7 @@ struct MessageView: View, Equatable {
 										Text(edited_timestamp, style: .time)
 									}
 								}
-								.font(.system(size: 12))
+                                .font(.callout)
 								.opacity(0.5)
                             }
                         }
