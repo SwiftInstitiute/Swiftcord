@@ -86,17 +86,19 @@ struct ServerFolder: View {
                     }
 
                     if open {
-                        ForEach(folder.guilds, id: \.id) { [self] guild in
-                            ServerButton(
-                                selected: selectedGuildID == guild.id || loadingGuildID == guild.id,
-                                guild: guild,
-                                name: guild.properties.name,
-                                serverIconURL: guild.properties.icon != nil ? "\(DiscordKitConfig.default.cdnURL)icons/\(guild.id)/\(guild.properties.icon!).webp?size=240" : nil,
-                                isLoading: loadingGuildID == guild.id
-                            ) {
-                                selectedGuildID = guild.id
+                        LazyVStack(spacing: 8) {
+                            ForEach(folder.guilds, id: \.id) { [self] guild in
+                                ServerButton(
+                                    selected: selectedGuildID == guild.id,
+                                    guild: guild,
+                                    name: guild.properties.name,
+                                    serverIconURL: guild.properties.icon != nil ? "\(DiscordKitConfig.default.cdnURL)icons/\(guild.id)/\(guild.properties.icon!).webp?size=240" : nil,
+                                    isLoading: false
+                                ) {
+                                    selectedGuildID = guild.id
+                                }
+                                .transition(.move(edge: .top).combined(with: .opacity)) // Prevent server buttons from "fading in" during transition
                             }
-                            .transition(.move(edge: .top).combined(with: .opacity)) // Prevent server buttons from "fading in" during transition
                         }
                     }
                 }

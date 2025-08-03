@@ -12,22 +12,26 @@ import DiscordKit
 import DiscordKitCore
 
 struct ContentView: View {
-    @State private var loadingGuildID: Snowflake?
-    @State private var isLoadingGuilds = false
-
-    @State private var presentingOnboarding = false
-    @State private var presentingAddServer = false
-    @State private var skipWhatsNew = false
-    @State private var whatsNewMarkdown: String?
-
-    @StateObject private var audioManager = AudioCenterManager()
-
     @EnvironmentObject var gateway: DiscordGateway
     @EnvironmentObject var state: UIState
     @EnvironmentObject var accountsManager: AccountSwitcher
-
+    
+    @State private var presentingOnboarding = false
+    @State private var presentingAddServer = false
     @AppStorage("local.seenOnboarding") private var seenOnboarding = false
     @AppStorage("local.previousBuild") private var prevBuild: String?
+    @State private var skipWhatsNew = false
+    @State private var whatsNewMarkdown: String? = nil
+    
+    // Dynamic server loading
+    @State private var isLoadingGuilds = false
+    @State private var loadedGuilds: Set<String> = []
+    @State private var guildLoadQueue: [String] = []
+    @State private var isProcessingGuildQueue = false
+    private let maxConcurrentGuildLoads = 3
+    private let guildLoadBatchSize = 10
+
+    @StateObject private var audioManager = AudioCenterManager()
 
     private let log = Logger(category: "ContentView")
 
@@ -94,6 +98,51 @@ struct ContentView: View {
         return unsortedGuilds + folderItems
     }
     
+    private func loadGuildsDynamically() {
+        guard !isProcessingGuildQueue else { return }
+        isProcessingGuildQueue = true
+        
+        // Process guild queue in batches
+        let batch = Array(guildLoadQueue.prefix(guildLoadBatchSize))
+        guildLoadQueue.removeFirst(min(guildLoadBatchSize, guildLoadQueue.count))
+        
+        Task {
+            await withTaskGroup(of: Void.self) { group in
+                for guildId in batch {
+                    group.addTask {
+                        await self.loadGuildDetails(guildId: guildId)
+                    }
+                }
+            }
+            
+            DispatchQueue.main.async {
+                self.isProcessingGuildQueue = false
+                if !self.guildLoadQueue.isEmpty {
+                    // Continue processing if there are more guilds
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        self.loadGuildsDynamically()
+                    }
+                }
+            }
+        }
+    }
+    
+    private func loadGuildDetails(guildId: String) async {
+        // Simulate guild loading with a small delay to prevent overwhelming the API
+        try? await Task.sleep(nanoseconds: 50_000_000) // 50ms delay
+        
+        DispatchQueue.main.async {
+            self.loadedGuilds.insert(guildId)
+        }
+    }
+    
+    private func queueGuildForLoading(_ guildId: String) {
+        if !loadedGuilds.contains(guildId) && !guildLoadQueue.contains(guildId) {
+            guildLoadQueue.append(guildId)
+            loadGuildsDynamically()
+        }
+    }
+    
     private func getSelectedGuild() -> PreloadedGuild? {
         guard let selectedGuildID = state.selectedGuildID else { return nil }
         if selectedGuildID == "@me" {
@@ -117,30 +166,28 @@ struct ContentView: View {
 
                 HorizontalDividerView().frame(width: 32)
 
-                if isLoadingGuilds {
-                    // Show loading indicator while guilds are being loaded
-                    ProgressView()
-                        .scaleEffect(0.8)
-                        .frame(width: 48, height: 48)
-                        .padding(.vertical, 8)
-                } else {
+                LazyVStack(spacing: 8) {
                     ForEach(self.serverListItems) { item in
                         switch item {
                         case .guild(let guild):
                             ServerButton(
-                                selected: state.selectedGuildID == guild.id || loadingGuildID == guild.id,
+                                selected: state.selectedGuildID == guild.id,
                                 guild: guild,
                                 name: guild.properties.name,
                                 serverIconURL: guild.properties.iconURL(),
-                                isLoading: loadingGuildID == guild.id
+                                isLoading: !loadedGuilds.contains(guild.id)
                             ) {
                                 state.selectedGuildID = guild.id
+                                queueGuildForLoading(guild.id)
+                            }
+                            .onAppear {
+                                queueGuildForLoading(guild.id)
                             }
                         case .guildFolder(let folder):
                             ServerFolder(
                                 folder: folder,
                                 selectedGuildID: $state.selectedGuildID,
-                                loadingGuildID: loadingGuildID
+                                loadingGuildID: nil
                             )
                         }
                     }

@@ -186,6 +186,12 @@ struct MessagesView: View {
         )
         .equatable()
         .listRowBackground(msg.mentions(gateway.cache.user?.id) ? Color.orange.opacity(0.1) : .clear)
+        .onAppear {
+            // Queue message for dynamic loading if not already loaded
+            if !viewModel.loadedMessageIds.contains(msg.id) {
+                viewModel.queueMessageForLoading(msg.id)
+            }
+        }
     }
 
     func history(proxy: ScrollViewProxy) -> some View {
@@ -209,8 +215,6 @@ struct MessagesView: View {
             if !newDay && newMsg {
                 UnreadDivider()
                     .id("unread")
-            }
-            if !shrunk && !newMsg {
             }
             
             if newDay && newMsg {
@@ -240,6 +244,10 @@ struct MessagesView: View {
                                     proxy.scrollTo("unread", anchor: .bottom)
                                 }
                             }
+                        }
+                        .onChange(of: serverCtx.channel?.id) { _ in
+                            // Clear cache when switching channels for better performance
+                            viewModel.clearCache()
                         }
                     
                     
@@ -495,6 +503,15 @@ extension MessagesView {
       try Task.checkCancellation()
       
       viewModel.reachedTop = newMessages.count < 50
+      
+      // Add messages to cache and queue for dynamic loading
+      for message in newMessages {
+        viewModel.messageCache[message.id] = message
+        if !viewModel.loadedMessageIds.contains(message.id) {
+          viewModel.queueMessageForLoading(message.id)
+        }
+      }
+      
       viewModel.messages.append(contentsOf: newMessages)
       // Remove duplicates based on message ID, keeping the first occurrence
       var seenIDs = Set<Snowflake>()

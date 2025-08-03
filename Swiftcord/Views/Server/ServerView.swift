@@ -179,20 +179,6 @@ struct ServerView: View {
   
   private var primaryActionToolbar: some ToolbarContent {
     ToolbarItemGroup(placement: .primaryAction) {
-      HStack(spacing: 8) {
-        Button {
-          // Play button action
-        } label: {
-          Image(systemName: "play.fill")
-            .foregroundColor(.primary.opacity(0.8))
-        }
-        .buttonStyle(.plain)
-        .frame(width: 20, height: 20)
-      }
-      .padding(.horizontal, 16)
-      .padding(.vertical, 10)
-      .background(Color(NSColor.controlBackgroundColor))
-      .cornerRadius(8)
     }
   }
   
