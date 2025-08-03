@@ -113,7 +113,7 @@ struct DayDividerView: View {
 struct UnreadDivider: View {
     var body: some View {
         HStack(spacing: 0) {
-            Rectangle().fill(.red).frame(height: 1).frame(maxWidth: .infinity)
+            Rectangle().fill(.clear).frame(height: 1).frame(maxWidth: .infinity)
             Text("New")
                 .textCase(.uppercase).font(.headline)
                 .padding(.horizontal, 4).padding(.vertical, 2)
@@ -183,7 +183,7 @@ struct MessagesView: View {
 
                 if newMsg { UnreadDivider() }
                 if !shrunk && !newMsg {
-                    Spacer(minLength: 16 - MessageView.lineSpacing / 2)
+                    Spacer(minLength: 8 - MessageView.lineSpacing / 2)
                 }
             }
 
@@ -216,19 +216,18 @@ struct MessagesView: View {
                             }
                         }
                 }
-
-                Spacer(minLength: 52).zeroRowInsets() // Ensure content is fully visible and not hidden behind toolbar when scrolled to the top
             }
-            .listStyle(PlainListStyle())
+            .listStyle(.plain)
+            .background(Color.clear)
+            .environment(\.defaultMinListRowHeight, 0)
+            .environment(\.defaultMinListHeaderHeight, 0)
             .introspectTableView { tableView in
                 tableView.backgroundColor = .clear
                 tableView.enclosingScrollView!.drawsBackground = false
                 tableView.enclosingScrollView!.rotate(byDegrees: 180)
                 tableView.enclosingScrollView!.scrollerInsets = NSEdgeInsets(top: 0, left: 0, bottom: 52, right: 0)
             }
-            .environment(\.defaultMinListRowHeight, 1) // By SwiftUI's logic, 0 is negative so we use 1 instead
             .scaleEffect(x: -1, y: 1, anchor: .center)
-            .background(.clear)
             .frame(maxHeight: .infinity)
             .padding(.bottom, 24 + 7) // Ensure List doesn't go below text input field (and its border radius)
         }
@@ -506,10 +505,10 @@ extension MessagesView {
   }
   
   func preAttachChecks(for attachment: URL) -> Bool {
-    guard let size = try? attachment.resourceValues(forKeys: [URLResourceKey.fileSizeKey]).fileSize, size < 8*1024*1024 else {
+    guard let size = try? attachment.resourceValues(forKeys: [URLResourceKey.fileSizeKey]).fileSize, size < 10*1024*1024 else {
       viewModel.newAttachmentErr = NewAttachmentError(
         title: "Your files are too powerful",
-        message: "The max file size is 8MB."
+        message: "The max file size is 10MB."
       )
       return false
     }

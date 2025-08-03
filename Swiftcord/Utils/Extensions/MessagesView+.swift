@@ -106,10 +106,10 @@ internal extension MessagesView {
 	}
 
 	func preAttachChecks(for attachment: URL) -> Bool {
-		guard let size = try? attachment.resourceValues(forKeys: [URLResourceKey.fileSizeKey]).fileSize, size < 8*1024*1024 else {
+		guard let size = try? attachment.resourceValues(forKeys: [URLResourceKey.fileSizeKey]).fileSize, size < 10*1024*1024 else {
 			viewModel.newAttachmentErr = NewAttachmentError(
 				title: "Your files are too powerful",
-				message: "The max file size is 8MB."
+				message: "The max file size is 10MB."
 			)
 			return false
 		}

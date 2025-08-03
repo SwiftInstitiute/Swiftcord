@@ -160,9 +160,10 @@ struct ServerView: View {
       }
       .environmentObject(serverCtx)
       .navigationTitle("")
+      .background(Color(NSColor.controlBackgroundColor))
       .toolbar {
         ToolbarItemGroup(placement: .navigation) {
-          HStack {
+          HStack(spacing: 8) {
             Button {
               NSApp.keyWindow?.firstResponder?.tryToPerform(#selector(NSSplitViewController.toggleSidebar(_:)), with: nil)
             } label: {
@@ -172,10 +173,19 @@ struct ServerView: View {
                 : (serverCtx.channel?.type == .groupDM ? "person.2.fill" : "number")
               ).foregroundColor(.primary.opacity(0.8))
             }
+            .buttonStyle(.plain)
+            .frame(width: 20, height: 20)
+            
             Text(serverCtx.channel?.label(gateway.cache.users) ?? "No Channel")
               .font(.title2)
+              .fontWeight(.semibold)
           }
         }
+        
+        ToolbarItemGroup(placement: .navigation) {
+          Spacer()
+        }
+        
         ToolbarItem(placement: .navigation) {
           Button(action: { mediaCenterOpen = true }, label: { Image(systemName: "play.circle") })
             .popover(isPresented: $mediaCenterOpen) { MediaControllerView() }
