@@ -88,8 +88,112 @@ struct CurrentUserFooter: View {
     }
 
     var body: some View {
-        let curUserPresence = gateway.presences[user.id]?.status ?? .offline
-        let customStatus = gateway.presences[user.id]?.activities.first { $0.type == .custom }
+		let curUserPresence = gateway.presences[user.id]?.status ?? .offline
+		let customStatus = gateway.presences[user.id]?.activities.first { $0.type == .custom }
+
+		HStack(spacing: 14) {
+			Button {
+				userPopoverPresented = true
+				AnalyticsWrapper.event(type: .openPopout, properties: [
+					"type": "User Status Menu",
+					"other_user_id": user.id
+				])
+			} label: {
+				HStack(spacing: 8) {
+					AvatarWithPresence(
+						avatarURL: user.avatarURL(),
+						presence: curUserPresence,
+						animate: false
+					)
+					.controlSize(.small)
+
+					VStack(alignment: .leading, spacing: 0) {
+						Text(user.global_name ?? user.username).font(.headline)
+						Group {
+							if let customStatus = customStatus {
+								Text(customStatus.state ?? "")
+									.lineLimit(1)
+									.truncationMode(.tail)
+							} else {
+								Text(user.discriminator == "0" ? user.username : "#" + user.discriminator)
+							}
+						}
+						.font(.callout)
+						.opacity(0.75)
+					}
+				}
+				.padding(2)
+				.contentShape(Rectangle())
+			}
+			.buttonStyle(.plain)
+			.popover(isPresented: $userPopoverPresented) {
+				MiniUserProfileView(user: User(from: user), member: nil) {
+					VStack(alignment: .leading, spacing: 4) {
+						VStack(alignment: .leading, spacing: 6) {
+							Text("Discord Member Since")
+								.font(.headline)
+								.textCase(.uppercase)
+							Text(user.id.createdAt?.formatted(.dateTime.day().month().year()) ?? "Unknown")
+						}
+						.padding(.bottom, 8)
+
+						Divider()
+
+						// Set presence
+						Menu {
+							ForEach(Self.presences, id: \.icon) { (presence, icon) in
+								Button {
+									updatePresence(with: presence)
+								} label: {
+									// Not possible to set custom image size and color
+									Image(systemName: icon)
+									Text(presence.toLocalizedString())
+								}
+								if presence == Self.presences.first?.presence { Divider() }
+							}
+						} label: {
+							Text(curUserPresence.toLocalizedString())
+						}
+						.controlSize(.large)
+						.disabled(settingPresence)
+						Button {
+							customStatusPresented = true
+						} label: {
+							if customStatus != nil {
+								HStack {
+									Text("Edit Custom Status")
+									Spacer()
+									Button {
+										updatePresence(with: curUserPresence, clearCustomStatus: true)
+									} label: {
+										Image(systemName: "xmark.circle.fill").font(.system(size: 18))
+									}
+									.buttonStyle(.plain)
+									.help("Clear Custom Status")
+								}
+							} else {
+								Label("Set Custom Status", systemImage: "face.smiling")
+									.frame(maxWidth: .infinity, alignment: .leading)
+							}
+						}
+						.buttonStyle(FlatButtonStyle(outlined: true, text: true))
+						.controlSize(.small)
+						.disabled(settingPresence)
+
+						Divider()
+
+						Button {
+							switcherPresented = true
+							AnalyticsWrapper.event(type: .impressionAccountSwitcher)
+						} label: {
+							Label("Switch Accounts", systemImage: "arrow.left.arrow.right")
+								.frame(maxWidth: .infinity, alignment: .leading)
+						}
+						.buttonStyle(FlatButtonStyle(outlined: true, text: true))
+						.controlSize(.small)
+					}
+				}
+			}
 
         HStack(spacing: 14) {
             Button {

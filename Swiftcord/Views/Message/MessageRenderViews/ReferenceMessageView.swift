@@ -35,9 +35,9 @@ struct ReferenceMessageView: View {
 							size: 16
 						)
 
-						HStack(spacing: 4) {
-							Text(quotedMsg.author.global_name ?? quotedMsg.author.username)
-								.font(.system(size: 14))
+						Group {
+							Text(quotedMsg.author.displayName ?? quotedMsg.author.global_name ?? quotedMsg.author.username)
+								.font(.body)
 								.opacity(0.9)
 
 							if quotedMsg.author.bot == true || quotedMsg.webhook_id != nil {
@@ -48,17 +48,19 @@ struct ReferenceMessageView: View {
 							}
 
 							Text(markdown: quotedMsg.content.replacingOccurrences(of: "\n", with: " "))
-								.font(.system(size: 14))
+								.font(.body)
 								.opacity(0.75)
 								.lineLimit(1)
 							if quotedMsg.content.isEmpty {
 								Text("message.reply.attachment")
-									.font(.system(size: 14).italic())
+									.font(.body.italic())
 									.opacity(0.75)
 							}
 
 							if !quotedMsg.attachments.isEmpty || !quotedMsg.embeds.isEmpty {
-								Image(systemName: "photo.fill").font(.system(size: 16)).opacity(0.75)
+								Image(systemName: "photo.fill")
+									.font(.system(size: 16))
+									.opacity(0.75)
 							}
 						}
 					} else {
@@ -72,11 +74,10 @@ struct ReferenceMessageView: View {
 							.font(.system(size: 16))
 							.frame(width: 16, height: 16)
 
-						Text("message.gone")
-							.italic()
-							.font(.system(size: 14))
-							.opacity(0.75)
-					}
+					Text("message.gone")
+						.italic()
+						.font(.body)
+						.opacity(0.75)
 				}
 			}
 			Spacer()
