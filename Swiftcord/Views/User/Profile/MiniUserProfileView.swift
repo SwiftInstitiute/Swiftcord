@@ -25,7 +25,7 @@ struct MiniUserProfileView<RichContentSlot: View>: View {
 	@Environment(\.colorScheme) var colorScheme
 
     var body: some View {
-		let avatarURL = user.avatarURL()
+		let avatarURL = user.avatarURL(size: 160)
 		let presence = gateway.presences[user.id]
 
 		VStack(alignment: .leading, spacing: 0) {

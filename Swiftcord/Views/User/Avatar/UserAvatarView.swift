@@ -81,11 +81,11 @@ struct UserAvatarView: View, Equatable {
 		.popover(isPresented: $infoPresenting, arrowEdge: .trailing) {
 			MiniUserProfileView(
 				user: user,
-				profile: $profile,
-				guildRoles: state.serverCtx.roles,
+				member: profile?.guild_member,
+				guildRoles: state.serverCtx.roles as? [Role],
 				isWebhook: webhookID != nil,
-				loadError: loadFullFailed
-			) {
+				loadError: loadFullFailed,
+				contentSlot: {
 				if let profile = profile, guildID != "@me" {
 					let guildRoles = state.serverCtx.roles
 					let roles = guildRoles.filter {
@@ -136,7 +136,8 @@ struct UserAvatarView: View, Equatable {
 					.onAppear {
 						note = UserDefaults.standard.string(forKey: "notes.\(user.id)") ?? ""
 					}
-			}
+				}
+			)
 		}
 	}
 

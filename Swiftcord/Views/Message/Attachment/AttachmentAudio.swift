@@ -19,7 +19,7 @@ struct AttachmentAudio: View {
 		audioManager.append(
 			source: url,
 			filename: attachment.filename,
-			from: "\(state.serverCtx.guild!.name) > #\(state.serverCtx.channel?.name ?? "")"
+			                        from: "\(state.serverCtx.guild!.properties.name) > #\(state.serverCtx.channel?.name ?? "")"
 		)
 	}
 

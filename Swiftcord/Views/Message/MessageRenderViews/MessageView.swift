@@ -35,25 +35,26 @@ struct NonUserBadge: View {
 }
 
 struct MessageView: View, Equatable {
-  static func == (lhs: Self, rhs: Self) -> Bool {
-      lhs.message == rhs.message
-      // && lhs.message.embeds == rhs.message.embeds
-  }
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.message == rhs.message
+        // && lhs.message.embeds == rhs.message.embeds
+    }
 
-  let message: Message
-  let shrunk: Bool
-  let quotedMsg: Message?
-  let onQuoteClick: (Snowflake) -> Void
+    let message: Message
+    let prevMessage: Message?
+    let shrunk: Bool
+    let quotedMsg: Message?
+    let onQuoteClick: (Snowflake) -> Void
 
-  @Binding var replying: MessagesViewModel.ReplyRef?
-  @Binding var highlightMsgId: Snowflake?
+	@Binding var replying: MessagesViewModel.ReplyRef?
+	@Binding var highlightMsgId: Snowflake?
 
-  @State private var hovered = false
-  @State private var loadedQuotedMsg: Message?
-  @State private var loadQuotedMsgErr = false
+    @State private var hovered = false
+    @State private var loadedQuotedMsg: Message?
+    @State private var loadQuotedMsgErr = false
 
-  @EnvironmentObject var serverCtx: ServerContext
-  @EnvironmentObject var gateway: DiscordGateway
+    @EnvironmentObject var serverCtx: ServerContext
+    @EnvironmentObject var gateway: DiscordGateway
 
 	// The spacing between lines of text, used to compute padding and line height
 	static let lineSpacing: CGFloat = 4
@@ -77,8 +78,7 @@ struct MessageView: View, Equatable {
             ) {
                 if MessageView.defaultTypes.contains(message.type) {
                     if !shrunk {
-                      UserAvatarView(user: message.author, guildID: serverCtx.guild!.id, webhookID: message.webhook_id)
-							.equatable()
+                        UserAvatarView(user: message.author, guildID: serverCtx.guild!.id, webhookID: message.webhook_id)
                     } else {
 						Text(message.timestamp, style: .time)
                             .font(.system(size: 8, weight: .semibold, design: .monospaced))
@@ -160,6 +160,12 @@ struct MessageView: View, Equatable {
 						Text("Edit")
 					}
 				}
+                
+                Button(action: { Task { await readMessage() } }) {
+                    Image(systemName: "message.badge")
+                    Text("Mark as unread")
+                }
+                
 				Button(role: .destructive, action: deleteMessage) {
 					Image(systemName: "xmark.bin.fill")
 					Text("Delete Message").foregroundColor(.red)
@@ -187,7 +193,7 @@ private extension MessageView {
 		withAnimation {
 			replying = .init(
 				messageID: message.id,
-        guildID: serverCtx.guild!.id,
+				guildID: serverCtx.guild!.id,
 				ping: true,
 				authorID: message.author.id,
 				authorUsername: message.author.username
@@ -210,6 +216,20 @@ private extension MessageView {
 	func editMessage() {
 		print(#function)
 	}
+    
+    func readMessage() async {
+        do {
+            let id = Int(floor((message.id as NSString).doubleValue / pow(2, 22)) - 1)
+            var defaultId: Snowflake
+            if id < 0 {
+                defaultId = "0"
+            } else {
+                defaultId = String(id << 22)
+            }
+            
+            let _ = try await restAPI.ackMessageRead(id: message.channel_id, msgID: prevMessage?.id ?? defaultId, manual: true, mention_count: 0)
+        } catch {}
+    }
 
 	func deleteMessage() {
 		Task {
@@ -218,16 +238,13 @@ private extension MessageView {
 	}
 
 	func copyLink() {
-    if let guildID = serverCtx.guild?.id,
-       let channelID = serverCtx.channel?.id {
-      
+		if let guildID = serverCtx.guild?.id, let channelID = serverCtx.channel?.id {
 			let pasteboard = NSPasteboard.general
 			pasteboard.clearContents()
 			pasteboard.setString(
 				"https://canary.discord.com/channels/\(guildID)/\(channelID)/\(message.id)",
 				forType: .string
 			)
-      
 		}
 	}
 

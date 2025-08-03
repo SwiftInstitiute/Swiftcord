@@ -80,6 +80,7 @@ struct ServerFolder: View {
                         Text(folder.name)
                             .font(.title3)
                             .padding(10)
+                            .frame(maxWidth: 300)
                             // Prevent popover from blocking clicks to other views
                             .interactiveDismissDisabled()
                     }
@@ -87,14 +88,14 @@ struct ServerFolder: View {
                     if open {
                         ForEach(folder.guilds, id: \.id) { [self] guild in
                             ServerButton(
-                              selectedID: $selectedGuildID,
-                              guildID: .constant(guild.id),
-                              name: .constant(guild.name),
-                              serverIconURL: .constant(guild.icon != nil ? "\(DiscordKitConfig.default.cdnURL)icons/\(guild.id)/\(guild.icon!).webp?size=240" : nil),
-                              systemIconName: .constant(nil),
-                              assetIconName: .constant(nil),
-                              isLoading: loadingGuildID == guild.id
-                            )
+                                selected: selectedGuildID == guild.id || loadingGuildID == guild.id,
+                                guild: guild,
+                                name: guild.properties.name,
+                                serverIconURL: guild.properties.icon != nil ? "\(DiscordKitConfig.default.cdnURL)icons/\(guild.id)/\(guild.properties.icon!).webp?size=240" : nil,
+                                isLoading: loadingGuildID == guild.id
+                            ) {
+                                selectedGuildID = guild.id
+                            }
                             .transition(.move(edge: .top).combined(with: .opacity)) // Prevent server buttons from "fading in" during transition
                         }
                     }
@@ -113,7 +114,7 @@ struct ServerFolder: View {
 
     struct GuildFolder: Identifiable {
         let name: String
-        let guilds: [Guild]
+        let guilds: [PreloadedGuild]
         let color: Color
 
         var id: Snowflake {
@@ -125,7 +126,7 @@ struct ServerFolder: View {
 struct ServerFolderButtonStyle: ButtonStyle {
     let open: Bool
     let color: Color
-    let guilds: [Guild]
+    let guilds: [PreloadedGuild]
     @Binding var hovered: Bool
 
     func makeBody(configuration: Configuration) -> some View {
@@ -171,11 +172,11 @@ struct ServerFolderButtonStyle: ButtonStyle {
 }
 
 struct MiniServerThumb: View {
-    let guild: Guild
+    let guild: PreloadedGuild
     let animate: Bool
 
     var body: some View {
-        if let serverIconPath = guild.icon, let iconURL = URL(string: "\(DiscordKitConfig.default.cdnURL)icons/\(guild.id)/\(serverIconPath).webp?size=240") {
+        if let serverIconPath = guild.properties.icon, let iconURL = URL(string: "\(DiscordKitConfig.default.cdnURL)icons/\(guild.id)/\(serverIconPath).webp?size=240") {
             if iconURL.isAnimatable {
                 SwiftyGifView(
                     url: iconURL.modifyingPathExtension("gif"),
@@ -191,7 +192,7 @@ struct MiniServerThumb: View {
                     .cornerRadius(8)
             }
         } else {
-            let iconName = guild.name.split(separator: " ").map { $0.prefix(1) }.joined(separator: "")
+            let iconName = guild.properties.name.split(separator: " ").map { $0.prefix(1) }.joined(separator: "")
             Text(iconName)
                 .font(.system(size: 8))
                 .lineLimit(1)

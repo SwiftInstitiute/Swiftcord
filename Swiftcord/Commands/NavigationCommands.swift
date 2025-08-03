@@ -43,24 +43,32 @@ struct NavigationCommands: Commands {
 
 			Divider()
 
-			Button("Previous Channel") {
-				if let channels = state.serverCtx.guild?.channels {
+			Button(action: {
+				if let guild = state.serverCtx.guild {
+					// Unwrap DecodeThrowable<Channel> to Channel
+					let channels = guild.channels.compactMap { try? $0.unwrap() }
 					let sortedChannels = sortChannels(channels)
 
-					guard let previousChannel = sortedChannels.before(state.serverCtx.channel!, loop: true) else { return }
-
-					state.serverCtx.channel = previousChannel
+					if let previousChannel = sortedChannels.before(state.serverCtx.channel!, loop: true) {
+						state.serverCtx.channel = previousChannel
+					}
 				}
+			}) {
+				Text("Previous Channel")
 			}.keyboardShortcut(.upArrow, modifiers: [.option])
 
-			Button("Next Channel") {
-				if let channels = state.serverCtx.guild?.channels {
+			Button(action: {
+				if let guild = state.serverCtx.guild {
+					// Unwrap DecodeThrowable<Channel> to Channel
+					let channels = guild.channels.compactMap { try? $0.unwrap() }
 					let sortedChannels = sortChannels(channels)
 
-					guard let nextChannel = sortedChannels.after(state.serverCtx.channel!, loop: true) else { return }
-
-					state.serverCtx.channel = nextChannel
+					if let nextChannel = sortedChannels.after(state.serverCtx.channel!, loop: true) {
+						state.serverCtx.channel = nextChannel
+					}
 				}
+			}) {
+				Text("Next Channel")
 			}.keyboardShortcut(.downArrow, modifiers: [.option])
 
 			Divider()

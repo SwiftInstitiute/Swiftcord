@@ -11,13 +11,15 @@ import DiscordKitCore
 
 class ServerContext: ObservableObject {
   @Published public var channel: Channel?
-  @Published public var guild: Guild?
+  @Published public var guild: PreloadedGuild?
   @Published public var typingStarted: [Snowflake: [TypingStart]] = [:]
   @Published public var roles: [Role] = []
+  @Published public var member: Member?
+  @Published public var basePermissions: Permissions = []
 }
 
 struct ServerView: View {
-  @Binding var guild: Guild?
+  @Binding var guild: PreloadedGuild?
   @State private var evtID: EventDispatch.HandlerIdentifier?
   @State private var mediaCenterOpen: Bool = false
   
@@ -29,8 +31,9 @@ struct ServerView: View {
   
   private func loadChannels() {
     guard state.loadingState != .initial else { return } // Ensure gateway is connected before loading anything
-    guard let channels = serverCtx.guild?.channels?.discordSorted()
-    else { return }
+    guard let guild = serverCtx.guild else { return }
+    // Unwrap DecodeThrowable<Channel> to Channel
+    let channels = guild.channels.compactMap { try? $0.unwrap() }.discordSorted()
     
     if let lastChannel = UserDefaults.standard.string(forKey: "lastCh.\(serverCtx.guild!.id)"),
        let lastChObj = channels.first(where: { $0.id == lastChannel }) { // swiftlint:disable:this indentation_width
@@ -44,12 +47,12 @@ struct ServerView: View {
     if serverCtx.channel == nil { state.loadingState = .messageLoad }
   }
   
-  private func bootstrapGuild(with existingGuild: Guild) {
+  private func bootstrapGuild(with existingGuild: PreloadedGuild) {
     serverCtx.guild = existingGuild
     serverCtx.roles = []
     loadChannels()
     // Sending malformed IDs causes an instant Gateway session termination
-    guard !existingGuild.isDMChannel else {
+    guard !existingGuild.properties.isDMChannel else {
       AnalyticsWrapper.event(type: .DMListViewed, properties: [
         "channel_id": serverCtx.channel?.id ?? "",
         "channel_type": serverCtx.channel?.type.rawValue ?? 1
@@ -59,13 +62,13 @@ struct ServerView: View {
     
     AnalyticsWrapper.event(type: .guildViewed, properties: [
       "guild_id": existingGuild.id,
-      "guild_is_vip": existingGuild.premium_tier != PremiumLevel.none,
-      "guild_num_channels": existingGuild.channels?.count ?? 0
+      "guild_is_vip": existingGuild.properties.premium_tier != PremiumLevel.none,
+      "guild_num_channels": existingGuild.channels.count
     ])
     
     // Subscribe to typing events
     gateway.subscribeGuildEvents(id: existingGuild.id)
-    serverCtx.roles = existingGuild.roles.compactMap { role in try? role.result.get() }
+    serverCtx.roles = existingGuild.roles.compactMap { try? $0.unwrap() }
     // Retrieve guild roles to update context
     Task {
       do {
@@ -83,66 +86,77 @@ struct ServerView: View {
     NSApp.keyWindow?.firstResponder?.tryToPerform(#selector(NSSplitViewController.toggleSidebar(_:)), with: nil)
   }
   
+  private var sidebarContent: some View {
+    VStack {
+      if let guildCtx = guild {
+        ChannelList(channels: guildCtx.properties.name == "DMs" ? gateway.cache.dms : guildCtx.channels.compactMap { try? $0.unwrap() }, selCh: $serverCtx.channel)
+          .toolbar {
+            ToolbarItem {
+              Text(guildCtx.properties.name == "DMs" ? "dm" : "\(guildCtx.properties.name)")
+                .font(.title3)
+                .fontWeight(.semibold)
+                .frame(maxWidth: 208) // Largest width before disappearing
+            }
+          }
+          .onChange(of: serverCtx.channel?.id) { newIDState in
+            guard let newID = newIDState else { return }
+            
+            UserDefaults.standard.setValue(newID, forKey: "lastCh.\(serverCtx.guild!.id)")
+            guild = guildCtx
+          }
+      } else {
+        ZStack {}
+          .frame(minWidth: 240, maxHeight: .infinity)
+      }
+      
+      if !gateway.connected || !gateway.reachable {
+        Label(
+          gateway.reachable
+          ? "Reconnecting..."
+          : "No network connectivity",
+          systemImage: gateway.reachable ? "arrow.clockwise" : "bolt.horizontal.fill"
+        )
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 4)
+        .background(gateway.reachable ? .orange : .red)
+        .animation(.easeIn, value: gateway.reachable)
+      }
+      
+      if let user = gateway.cache.user { CurrentUserFooter(user: user) }
+    }
+  }
+  
+  private var detailContent: some View {
+    Group {
+      if serverCtx.channel != nil {
+        MessagesView()
+      } else {
+        VStack(spacing: 24) {
+          Image(serverCtx.guild?.id == "@me" ? "NoDMs" : "NoGuildChannels")
+          if serverCtx.guild?.id == "@me" {
+            Text("dm.noChannels.body").opacity(0.75)
+          } else {
+            Text("server.noChannels.header").font(.headline).textCase(.uppercase)
+            Text("server.noChannels.body")
+              .padding(.top, -16)
+              .multilineTextAlignment(.center)
+          }
+        }
+        .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(.gray.opacity(0.15))
+      }
+    }
+  }
+  
+
+  
   var body: some View {
     if #available(macOS 13, *) {
       NavigationSplitView {
-        // MARK: Channel List
-        if let guildCtx = guild {
-          ChannelList(channels: guildCtx.name == "DMs" ? gateway.cache.dms : guildCtx.channels!, selCh: $serverCtx.channel)
-            .toolbar {
-              ToolbarItem {
-                Text(guildCtx.name == "DMs" ? "dm" : "\(guildCtx.name)")
-                  .font(.title3)
-                  .fontWeight(.semibold)
-                  .frame(maxWidth: 208) // Largest width before disappearing
-              }
-            }
-            .onChange(of: serverCtx.channel?.id) { newIDState in
-              guard let newID = newIDState else { return }
-              
-              UserDefaults.standard.setValue(newID, forKey: "lastCh.\(serverCtx.guild!.id)")
-              guild = guildCtx
-            }
-        } else {
-          ZStack {}
-            .frame(minWidth: 240, maxHeight: .infinity)
-        }
-        
-        if !gateway.connected || !gateway.reachable {
-          Label(
-            gateway.reachable
-            ? "Reconnecting..."
-            : "No network connectivity",
-            systemImage: gateway.reachable ? "arrow.clockwise" : "bolt.horizontal.fill"
-          )
-          .frame(maxWidth: .infinity)
-          .padding(.vertical, 4)
-          .background(gateway.reachable ? .orange : .red)
-          .animation(.easeIn, value: gateway.reachable)
-        }
-        
-        if let user = gateway.cache.user { CurrentUserFooter(user: user) }
-        
+        sidebarContent
       } detail: {
-        // MARK: Message History
-        if serverCtx.channel != nil {
-          MessagesView()
-        } else {
-          VStack(spacing: 24) {
-            Image(serverCtx.guild?.id == "@me" ? "NoDMs" : "NoGuildChannels")
-            if serverCtx.guild?.id == "@me" {
-              Text("dm.noChannels.body").opacity(0.75)
-            } else {
-              Text("server.noChannels.header").font(.headline).textCase(.uppercase)
-              Text("server.noChannels.body")
-                .padding(.top, -16)
-                .multilineTextAlignment(.center)
-            }
-          }
-          .padding()
-          .frame(maxWidth: .infinity, maxHeight: .infinity)
-          .background(.gray.opacity(0.15))
-        }
+        detailContent
       }
       .environmentObject(serverCtx)
       .navigationTitle("")

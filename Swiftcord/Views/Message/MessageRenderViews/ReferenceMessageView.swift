@@ -25,7 +25,7 @@ struct ReferenceMessageView: View {
 				.padding(.bottom, -12)
 				.padding(.trailing, -30)
 
-			Group {
+			VStack(alignment: .leading, spacing: 2) {
 				if let quotedMsg = referencedMsg {
 					if MessageView.defaultTypes.contains(quotedMsg.type) {
 						UserAvatarView(
@@ -35,8 +35,8 @@ struct ReferenceMessageView: View {
 							size: 16
 						)
 
-						Group {
-							Text(quotedMsg.author.displayName)
+						HStack(spacing: 4) {
+							Text(quotedMsg.author.global_name ?? quotedMsg.author.username)
 								.font(.system(size: 14))
 								.opacity(0.9)
 
@@ -67,14 +67,16 @@ struct ReferenceMessageView: View {
 						}
 					}
 				} else {
-					Image(systemName: "arrowshape.turn.up.left.circle.fill")
-						.font(.system(size: 16))
-						.frame(width: 16, height: 16)
+					HStack(spacing: 4) {
+						Image(systemName: "arrowshape.turn.up.left.circle.fill")
+							.font(.system(size: 16))
+							.frame(width: 16, height: 16)
 
-					Text("message.gone")
-						.italic()
-						.font(.system(size: 14))
-						.opacity(0.75)
+						Text("message.gone")
+							.italic()
+							.font(.system(size: 14))
+							.opacity(0.75)
+					}
 				}
 			}
 			Spacer()
