@@ -146,28 +146,31 @@ struct ContentView: View {
                     }
                 }
 
-                    ServerButton(
-                        selected: false,
-                        name: "Add a Server",
-                        systemIconName: "plus",
-                        bgColor: .green,
-                        noIndicator: true
-                    ) {
-                        presentingAddServer = true
-                    }.padding(.bottom, 4)
-                }
-                .padding(.bottom, 8)
-                .frame(width: 72)
+                ServerButton(
+                    selected: false,
+                    name: "Add a Server",
+                    systemIconName: "plus",
+                    bgColor: .green,
+                    noIndicator: true
+                ) {
+                    presentingAddServer = true
+                }.padding(.bottom, 4)
             }
-            .frame(maxHeight: .infinity, alignment: .top)
-            .background(VisualEffect()
-                .overlay(Color(nsColor: NSColor.controlBackgroundColor).opacity(0.5))
-            )
-
+            .padding(.bottom, 8)
+            .frame(width: 72)
+        }
+        .frame(maxHeight: .infinity, alignment: .top)
+        .background(Color(nsColor: NSColor.controlBackgroundColor).opacity(0.5))
+    }
+    
+    var body: some View {
+        HStack(spacing: 0) {
+            serverListView
             ServerView(
-                guild: state.selectedGuildID == nil
-                ? nil
-                : (state.selectedGuildID == "@me" ? makeDMGuild() : gateway.cache.guilds[state.selectedGuildID!]), serverCtx: state.serverCtx
+                guild: Binding(
+                    get: { state.selectedGuildID == nil ? nil : (state.selectedGuildID == "@me" ? makeDMGuild() : gateway.cache.guilds[state.selectedGuildID!]) },
+                    set: { _ in }
+                )
             )
         }
         .environmentObject(audioManager)
