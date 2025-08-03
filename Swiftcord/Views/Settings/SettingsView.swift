@@ -156,7 +156,7 @@ private extension SettingsView {
 								.frame(width: 40, height: 40)
 								.clipShape(Circle())
 							VStack(alignment: .leading) {
-								Text(user.username).font(.headline)
+								Text(user.displayName).font(.headline)
 								Text("Discord Account").font(.caption)
 							}
 						}

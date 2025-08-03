@@ -27,43 +27,43 @@ struct ActionMessageView: View {
 		switch message.type {
 		case .guildMemberJoin:
 			return ActionMessageData(
-				message: "**\(message.author.username)** joined this server.",
+				message: "**\(message.author.displayName)** joined this server.",
 				icon: "arrow.right",
 				color: .green
 			)
 		case .recipientAdd:
 			return ActionMessageData(
-				message: "**\(message.author.username)** added **\(message.mentions[0].username)** to the group.",
+				message: "**\(message.author.displayName)** added **\(message.mentions[0].displayName)** to the group.",
 				icon: "arrow.right",
 				color: .green
 			)
 		case .recipientRemove:
 			return ActionMessageData(
-				message: "**\(message.author.username)** left the group.",
+				message: "**\(message.author.displayName)** left the group.",
 				icon: "arrow.left",
 				color: .red
 			)
 		case .userPremiumGuildSub:
 			return ActionMessageData(
-				message: "**\(message.author.username)** just boosted the server!",
+				message: "**\(message.author.displayName)** just boosted the server!",
 				icon: "rhombus.fill",
 				color: .purple
 			)
 		case .userPremiumGuildSubTier1:
 			return ActionMessageData(
-				message: "**\(message.author.username)** just boosted the server! This server has achieved **Level 1!**",
+				message: "**\(message.author.displayName)** just boosted the server! This server has achieved **Level 1!**",
 				icon: "rhombus.fill",
 				color: .purple
 			)
 		case .userPremiumGuildSubTier2:
 			return ActionMessageData(
-				message: "**\(message.author.username)** just boosted the server! This server has achieved **Level 2!**",
+				message: "**\(message.author.displayName)** just boosted the server! This server has achieved **Level 2!**",
 				icon: "rhombus.fill",
 				color: .purple
 			)
 		case .userPremiumGuildSubTier3:
 			return ActionMessageData(
-				message: "**\(message.author.username)** just boosted the server! This server has achieved **Level 3!**",
+				message: "**\(message.author.displayName)** just boosted the server! This server has achieved **Level 3!**",
 				icon: "rhombus.fill",
 				color: .purple
 			)
@@ -72,7 +72,7 @@ struct ActionMessageView: View {
 				let isFromSelf = message.author.id == user.id
 				if message.call?.participants.count == 1 && !isFromSelf { // Missed call
 					return ActionMessageData(
-						message: "You missed a call from **\(message.author.username)**.",
+						message: "You missed a call from **\(message.author.displayName)**.",
 						icon: "phone.fill",
 						color: .gray
 					)
@@ -81,7 +81,7 @@ struct ActionMessageView: View {
 					let difference = message.call?.ended_timestamp?.timeIntervalSince(message.timestamp) ?? 0
 
 					return ActionMessageData(
-						message: "**\(message.author.username)** started a call\(!isActive ? " that lasted \(HelperInstances.intervalFormatter.string(from: difference)?.lowercased() ?? "an unknown duration")" : "").",
+						message: "**\(message.author.displayName)** started a call\(!isActive ? " that lasted \(HelperInstances.intervalFormatter.string(from: difference)?.lowercased() ?? "an unknown duration")" : "").",
 						icon: "phone.fill",
 						color: .green
 					)

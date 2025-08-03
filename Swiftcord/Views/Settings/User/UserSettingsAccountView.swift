@@ -51,7 +51,7 @@ struct UserSettingsAccountView: View {
             }
             .clipShape(Circle())
             .frame(width: 100, height: 100)
-            Text(user.username).font(.title2)
+            Text(user.displayName).font(.title2)
             Text(user.email)
 
             GroupBox {

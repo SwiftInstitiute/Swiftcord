@@ -87,12 +87,7 @@ struct MiniUserProfileView<RichContentSlot: View>: View {
 						Spacer()
 						Button {
 							pasteboard.declareTypes([.string], owner: nil)
-							pasteboard.setString(
-								user.discriminator == "0"
-									? user.username
-									: "\(user.username)#\(user.discriminator)",
-								forType: .string
-							)
+							pasteboard.setString(user.fullUsername, forType: .string)
 						} label: {
 							Image(systemName: "square.on.square")
 						}
@@ -100,7 +95,7 @@ struct MiniUserProfileView<RichContentSlot: View>: View {
 						.frame(width: 20, height: 20)
 					}
 					// Webhooks don't have discriminators
-					Text(user.username + (isWebhook || user.discriminator == "0" ? "" : "#\(user.discriminator)"))
+					Text(user.displayNameWithDiscriminator)
 				}
 
 				// Custom status

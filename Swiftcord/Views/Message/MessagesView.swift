@@ -263,7 +263,7 @@ struct MessagesView: View {
                 let typingMembers = serverCtx.channel == nil
                 ? []
                 : serverCtx.typingStarted[serverCtx.channel!.id]?
-                    .map { $0.member?.nick ?? $0.member?.user!.username ?? "" } ?? []
+                    .map { $0.member?.nick ?? $0.member?.user!.displayName ?? "" } ?? []
 
                 if !typingMembers.isEmpty {
                     HStack {
