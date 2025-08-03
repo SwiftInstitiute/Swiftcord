@@ -166,7 +166,7 @@ struct ContentView: View {
                     .frame(width: 32)
                     .padding(.vertical, 8)
 
-                LazyVStack(spacing: 8) {
+				LazyVStack(spacing: 8) {
                     ForEach(self.serverListItems) { item in
                         switch item {
                         case .guild(let guild):
@@ -193,7 +193,7 @@ struct ContentView: View {
                     }
                 }
 
-                ServerButton(
+									ServerButton(
                     selected: false,
                     name: "Add a Server",
                     systemIconName: "plus",
@@ -203,8 +203,8 @@ struct ContentView: View {
                     presentingAddServer = true
                 }.padding(.bottom, 4)
             }
-            .padding(.horizontal, 8)
-        }
+									.padding(.horizontal, 8)
+								}
         .frame(width: 72, height: .infinity, alignment: .top)
         .background(.ultraThinMaterial)
         .overlay(
@@ -224,15 +224,6 @@ struct ContentView: View {
                         .font(.title3)
                         .fontWeight(.semibold)
                         .foregroundColor(.primary)
-                    
-                    Spacer()
-                    
-                    Button(action: {}) {
-                        Image(systemName: "magnifyingglass")
-                            .font(.title3)
-                            .foregroundColor(.secondary)
-                    }
-                    .buttonStyle(.plain)
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
@@ -288,30 +279,30 @@ struct ContentView: View {
                             )
                         )
                         .environmentObject(sharedServerContext)
-                    } else {
+					} else {
                         // Welcome screen when no server is selected
                         VStack(spacing: 24) {
                             Image(systemName: "server.rack")
                                 .font(.system(size: 64))
                                 .foregroundColor(.secondary)
-                                .background(.ultraThinMaterial)
-                                .clipShape(Circle())
-                            
+								.background(.ultraThinMaterial)
+								.clipShape(Circle())
+							
                             VStack(spacing: 8) {
-                                Text("Welcome to Swiftcord")
+								Text("Welcome to Swiftcord")
                                     .font(.title2)
                                     .fontWeight(.semibold)
-                                    .foregroundColor(.primary)
-                                
+									.foregroundColor(.primary)
+								
                                 Text("Select a server from the left to get started")
                                     .font(.body)
-                                    .foregroundColor(.secondary)
+									.foregroundColor(.secondary)
                                     .multilineTextAlignment(.center)
                             }
-                        }
-                        .background(.ultraThinMaterial)
+						}
+						.background(.ultraThinMaterial)
                         .clipShape(RoundedRectangle(cornerRadius: 20))
-                        .padding(40)
+						.padding(40)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .background(
                             LinearGradient(

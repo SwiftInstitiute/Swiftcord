@@ -11,6 +11,8 @@ import DiscordKitCore
 struct DefaultMessageView: View {
 	let message: Message
 	let shrunk: Bool
+	
+	@EnvironmentObject var gateway: DiscordGateway
 
     var body: some View {
 		// For including additional message components
@@ -26,20 +28,42 @@ struct DefaultMessageView: View {
 				let msg = message.content.containsOnlyEmojiAndSpaces
 				? message.content.replacingOccurrences(of: " ", with: " ")
 				: message.content
-				Group {
-					Text(markdown: msg)
-						.font(message.content.containsOnlyEmojiAndSpaces ? .system(size: 48) : .appMessage)
-					+ Text(
-						message.edited_timestamp != nil && shrunk
-						? "message.edited.shrunk"
-						: ""
+				
+				// Check if this is the current user's message
+				let isCurrentUser = message.author.id == gateway.cache.user?.id
+				
+				HStack {
+					if isCurrentUser {
+						Spacer()
+					}
+					
+					Group {
+						Text(markdown: msg)
+							.font(message.content.containsOnlyEmojiAndSpaces ? .system(size: 48) : .appMessage)
+						+ Text(
+							message.edited_timestamp != nil && shrunk
+							? "message.edited.shrunk"
+							: ""
+						)
+						.font(.footnote)
+						.italic()
+						.foregroundColor(isCurrentUser ? .white.opacity(0.7) : Color(NSColor.textColor).opacity(0.4))
+					}
+					.lineSpacing(4)
+					.textSelection(.enabled)
+					.foregroundColor(isCurrentUser ? .white : .primary)
+					.padding(.horizontal, 12)
+					.padding(.vertical, 8)
+					.background(
+						RoundedRectangle(cornerRadius: 18)
+							.fill(isCurrentUser ? Color.accentColor : Color.gray.opacity(0.2))
 					)
-					.font(.footnote)
-					.italic()
-					.foregroundColor(Color(NSColor.textColor).opacity(0.4))
+					.frame(maxWidth: .infinity, alignment: isCurrentUser ? .trailing : .leading)
+					
+					if !isCurrentUser {
+						Spacer()
+					}
 				}
-				.lineSpacing(4)
-				.textSelection(.enabled)
 			}
 			if let stickerItems = message.sticker_items {
 				ForEach(stickerItems) { sticker in
