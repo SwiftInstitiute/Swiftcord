@@ -50,6 +50,31 @@ struct ServerView: View {
   private func bootstrapGuild(with existingGuild: PreloadedGuild) {
     serverCtx.guild = existingGuild
     serverCtx.roles = []
+    
+    // Set up member and base permissions for proper channel filtering
+    if let user = gateway.cache.user {
+      Task {
+        do {
+          let member = try await restAPI.getGuildMember(guild: existingGuild.id)
+          serverCtx.member = member
+          
+          // Calculate base permissions
+          var basePerms: Permissions = []
+          for role in member.roles {
+            for roleObj in existingGuild.roles {
+              if let unwrappedRole = try? roleObj.unwrap(), unwrappedRole.id == role {
+                basePerms.formUnion(unwrappedRole.permissions)
+                break
+              }
+            }
+          }
+          serverCtx.basePermissions = basePerms
+        } catch {
+          print("Could not retrieve guild member: \(error.localizedDescription)")
+        }
+      }
+    }
+    
     loadChannels()
     // Sending malformed IDs causes an instant Gateway session termination
     guard !existingGuild.properties.isDMChannel else {

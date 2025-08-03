@@ -396,9 +396,28 @@ struct MessagesView: View {
     }
 
     var body: some View {
+        let hasSendPermission: Bool = {
+            // For DMs and group DMs, always allow sending messages
+            if serverCtx.channel?.type == .dm || serverCtx.channel?.type == .groupDM {
+                return true
+            }
+            
+            // For server channels, check permissions
+            guard let guildID = serverCtx.guild?.id, let member = serverCtx.member else {
+                return true // Default to allowing if we can't determine permissions
+            }
+            
+            let permissions = serverCtx.channel?.computedPermissions(
+                guildID: guildID, member: member, basePerms: serverCtx.basePermissions
+            )
+            return permissions?.contains(.sendMessages) ?? true
+        }()
+        
         ZStack(alignment: .bottom) {
             historyList
-            inputContainer
+            if hasSendPermission {
+                inputContainer
+            }
         }
         .frame(minWidth: 525, minHeight: 500)
         // .blur(radius: viewModel.dropOver ? 8 : 0)

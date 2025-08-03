@@ -204,47 +204,11 @@ struct CurrentUserFooter: View {
                         Image(systemName: "gear")
                             .font(.system(size: 18, weight: .medium))
                             .foregroundColor(.white)
-                            .contentShape(Rectangle())
                     })
                     .frame(width: 32, height: 32)
-                    .background(
-                        ZStack {
-                            // Main background with better material
-                            RoundedRectangle(cornerRadius: 10)
-                                .fill(.regularMaterial)
-                                .shadow(color: .black.opacity(0.2), radius: 2, x: 0, y: 1)
-                            
-                            // Subtle inner highlight
-                            RoundedRectangle(cornerRadius: 10)
-                                .fill(
-                                    LinearGradient(
-                                        colors: [
-                                            Color.white.opacity(0.15),
-                                            Color.white.opacity(0.05),
-                                            Color.clear
-                                        ],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                            
-                            // Border with better contrast
-                            RoundedRectangle(cornerRadius: 10)
-                                .stroke(
-                                    LinearGradient(
-                                        colors: [
-                                            Color.white.opacity(0.4),
-                                            Color.white.opacity(0.2),
-                                            Color.white.opacity(0.1)
-                                        ],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    ),
-                                    lineWidth: 0.8
-                                )
-                        }
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .background(.ultraThinMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.white.opacity(0.2), lineWidth: 0.5))
                     .scaleEffect(settingsButtonHovered ? 1.05 : 1.0)
                     .animation(.easeInOut(duration: 0.1), value: settingsButtonHovered)
                     .onHover { isHovered in
@@ -264,47 +228,11 @@ struct CurrentUserFooter: View {
                     Image(systemName: "gear")
                         .font(.system(size: 18, weight: .medium))
                         .foregroundColor(.white)
-                        .contentShape(Rectangle())
                 })
                 .frame(width: 32, height: 32)
-                .background(
-                    ZStack {
-                        // Main background with better material
-                        RoundedRectangle(cornerRadius: 10)
-                            .fill(.regularMaterial)
-                            .shadow(color: .black.opacity(0.2), radius: 2, x: 0, y: 1)
-                        
-                        // Subtle inner highlight
-                        RoundedRectangle(cornerRadius: 10)
-                            .fill(
-                                LinearGradient(
-                                    colors: [
-                                        Color.white.opacity(0.15),
-                                        Color.white.opacity(0.05),
-                                        Color.clear
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                        
-                        // Border with better contrast
-                        RoundedRectangle(cornerRadius: 10)
-                            .stroke(
-                                LinearGradient(
-                                    colors: [
-                                        Color.white.opacity(0.4),
-                                        Color.white.opacity(0.2),
-                                        Color.white.opacity(0.1)
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ),
-                                lineWidth: 0.8
-                            )
-                    }
-                )
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .background(.ultraThinMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.white.opacity(0.2), lineWidth: 0.5))
                 .scaleEffect(settingsButtonHovered ? 1.05 : 1.0)
                 .animation(.easeInOut(duration: 0.1), value: settingsButtonHovered)
                 .onHover { isHovered in

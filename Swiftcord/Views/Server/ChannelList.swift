@@ -89,19 +89,28 @@ struct ChannelList: View, Equatable {
 
 	var body: some View {
 		let availableChs = channels.filter { channel in
-			guard let guildID = serverCtx.guild?.id, let member = serverCtx.member else {
-				// print("no guild or member!")
-				return true
-			}
 			guard channel.type != .category else {
 				return true
 			}
-			return channel.computedPermissions(
+			
+			// For DMs, always show channels
+			if serverCtx.guild?.properties.isDMChannel == true {
+				return true
+			}
+			
+			// For server channels, check permissions if available
+			guard let guildID = serverCtx.guild?.id, let member = serverCtx.member else {
+				return true
+			}
+			
+			let permissions = channel.computedPermissions(
 				guildID: guildID,
 				member: member,
 				basePerms: serverCtx.basePermissions
 			)
-			.contains(.viewChannel)
+			// Show channel if user has view permission or is admin
+			// If permissions check fails, default to showing the channel (safety fallback)
+			return permissions.contains(.viewChannel) || serverCtx.basePermissions.contains(.administrator)
 		}
 		ScrollView {
 			LazyVStack(spacing: 0) {
