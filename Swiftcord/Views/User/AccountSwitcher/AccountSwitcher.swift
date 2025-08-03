@@ -11,7 +11,7 @@ import DiscordKit
 import os
 import Sentry
 
-public class AccountSwitcher: NSObject, ObservableObject {
+public class AccountSwitcher: NSObject, ObservableObject, @unchecked Sendable {
 	@Published var accounts: [AccountMeta] = []
 
 	static let META_KEY = "accountsMeta"

@@ -36,7 +36,7 @@ struct ReferenceMessageView: View {
 						)
 
 						Group {
-							Text(quotedMsg.author.displayName ?? quotedMsg.author.global_name ?? quotedMsg.author.username)
+							Text(quotedMsg.author.displayName.isEmpty ? (quotedMsg.author.global_name ?? quotedMsg.author.username) : quotedMsg.author.displayName)
 								.font(.body)
 								.opacity(0.9)
 
@@ -74,10 +74,11 @@ struct ReferenceMessageView: View {
 							.font(.system(size: 16))
 							.frame(width: 16, height: 16)
 
-					Text("message.gone")
-						.italic()
-						.font(.body)
-						.opacity(0.75)
+						Text("message.gone")
+							.italic()
+							.font(.body)
+							.opacity(0.75)
+					}
 				}
 			}
 			Spacer()

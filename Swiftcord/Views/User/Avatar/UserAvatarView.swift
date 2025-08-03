@@ -82,7 +82,7 @@ struct UserAvatarView: View, Equatable {
 			MiniUserProfileView(
 				user: user,
 				member: profile?.guild_member,
-				guildRoles: state.serverCtx.roles as? [Role],
+				guildRoles: state.serverCtx.roles,
 				isWebhook: webhookID != nil,
 				loadError: loadFullFailed,
 				contentSlot: {

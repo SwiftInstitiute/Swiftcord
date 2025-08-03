@@ -56,16 +56,15 @@ struct RichEmbedView: View {
 							.cornerRadius(12)
 						}
 
-						if let authorName = author.name as? String {
-							if let urlStr = author.url, let url = URL(string: urlStr) {
-								Link(destination: url) {
-									Text(authorName).font(.headline)
-								}.foregroundColor(.primary)
-							} else {
-								Text(authorName)
-									.font(.headline)
-									.textSelection(.enabled)
-							}
+						let authorName = author.name
+						if let urlStr = author.url, let url = URL(string: urlStr) {
+							Link(destination: url) {
+								Text(authorName).font(.headline)
+							}.foregroundColor(.primary)
+						} else {
+							Text(authorName)
+								.font(.headline)
+								.textSelection(.enabled)
 						}
 					}
 				}

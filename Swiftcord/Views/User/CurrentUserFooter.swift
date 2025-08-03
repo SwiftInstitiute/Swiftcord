@@ -101,7 +101,7 @@ struct CurrentUserFooter: View {
 			} label: {
 				HStack(spacing: 8) {
 					AvatarWithPresence(
-						avatarURL: user.avatarURL(),
+						avatarURL: user.avatarURL(size: 160),
 						presence: curUserPresence,
 						animate: false
 					)
@@ -194,114 +194,6 @@ struct CurrentUserFooter: View {
 					}
 				}
 			}
-
-        HStack(spacing: 14) {
-            Button {
-                userPopoverPresented = true
-                AnalyticsWrapper.event(type: .openPopout, properties: [
-                    "type": "User Status Menu",
-                    "other_user_id": user.id
-                ])
-            } label: {
-                HStack(spacing: 8) {
-                    AvatarWithPresence(
-                        avatarURL: user.avatarURL(size: 160),
-                        presence: curUserPresence,
-                        animate: false
-                    )
-                    .controlSize(.small)
-
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text(user.displayName)
-                            .font(.headline)
-                        Group {
-                            if let customStatus = customStatus {
-                                Text(customStatus.state ?? "")
-                                    .lineLimit(1)
-                                    .truncationMode(.tail)
-                            } else if user.discriminator != "0" {
-                                Text("#" + user.discriminator)
-                            } else {
-                                Text("")
-                            }
-                        }
-                        .font(.system(size: 12))
-                        .opacity(0.75)
-                    }
-                }
-                .padding(2)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .popover(isPresented: $userPopoverPresented) {
-                MiniUserProfileView(
-                    user: User(from: user),
-                    member: nil,
-                    guildRoles: nil,
-                    isWebhook: false,
-                    loadError: false
-                ) {
-                    VStack(spacing: 4) {
-                        if !(user.bio?.isEmpty ?? true) { Divider() }
-
-                        Menu {
-                            ForEach(Self.presences, id: \.icon) { (presence, icon) in
-                                Button {
-                                    updatePresence(with: presence)
-                                } label: {
-                                    Image(systemName: icon)
-                                    Text(presence.toLocalizedString())
-                                }
-
-                                if presence == Self.presences.first?.presence {
-                                    Divider()
-                                }
-                            }
-                        } label: {
-                            Text(curUserPresence.toLocalizedString())
-                        }
-                        .controlSize(.large)
-                        .disabled(settingPresence)
-
-                        Button {
-                            customStatusPresented = true
-                        } label: {
-                            if customStatus != nil {
-                                HStack {
-                                    Text("Edit Custom Status")
-                                    Spacer()
-                                    Button {
-                                        updatePresence(with: curUserPresence, clearCustomStatus: true)
-                                    } label: {
-                                        Image(systemName: "xmark.circle.fill")
-                                            .font(.system(size: 18))
-                                    }
-                                    .buttonStyle(.plain)
-                                    .help("Clear Custom Status")
-                                }
-                            } else {
-                                Label("Set Custom Status", systemImage: "face.smiling")
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                            }
-                        }
-                        .buttonStyle(FlatButtonStyle(outlined: true, text: true))
-                        .controlSize(.small)
-                        .disabled(settingPresence)
-
-                        Divider()
-
-                        Button {
-                            switcherPresented = true
-                            AnalyticsWrapper.event(type: .impressionAccountSwitcher)
-                        } label: {
-                            Label("Switch Accounts", systemImage: "arrow.left.arrow.right")
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                        .buttonStyle(FlatButtonStyle(outlined: true, text: true))
-                        .controlSize(.small)
-                    }
-                }
-            }
 
             Spacer()
 

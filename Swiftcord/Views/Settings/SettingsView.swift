@@ -196,7 +196,7 @@ private extension SettingsView {
 				}.navigationSplitViewColumnWidth(215)
 			} detail: {
 				ScrollView {
-					Group {
+					VStack {
 						switch selectedPage.name {
 						case .appearance:
 							AppSettingsAppearanceView()
@@ -212,21 +212,18 @@ private extension SettingsView {
 						case .textImages:
 							AppSettingsTextAndImagesView()
 						// MARK: Misc
-						case .about:
-							AboutSwiftcordView()
 						case .credits:
 							CreditsView()
 						// MARK: Developer
 						case .advanced:
 							AppSettingsAdvancedView()
-						case .credits:
-							CreditsView()
 						case .debug:
 							DebugSettingsView()
 						default:
 							Text("Unimplemented view: \(selectedPage.name.rawValue)")
 						}
-					}.padding(20)
+					}
+					.padding(20)
 				}.navigationSplitViewColumnWidth(500)
 			}
 			.searchable(text: $filter, placement: .sidebar)
