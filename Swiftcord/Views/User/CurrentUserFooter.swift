@@ -22,6 +22,7 @@ struct CurrentUserFooter: View {
     @State var showQR = false
     @State var switcherHelpPresented = false
     @State var settingPresence = false
+    @State var settingsButtonHovered = false
 
     @EnvironmentObject var switcher: AccountSwitcher
     @EnvironmentObject var gateway: DiscordGateway
@@ -201,12 +202,57 @@ struct CurrentUserFooter: View {
                 SettingsLink {
                     Button(action: {}, label: {
                         Image(systemName: "gear")
-                            .font(.system(size: 18))
-                            .opacity(0.75)
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundColor(.white)
+                            .contentShape(Rectangle())
                     })
-                    .buttonStyle(.plain)
                     .frame(width: 32, height: 32)
+                    .background(
+                        ZStack {
+                            // Main background with better material
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(.regularMaterial)
+                                .shadow(color: .black.opacity(0.2), radius: 2, x: 0, y: 1)
+                            
+                            // Subtle inner highlight
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(
+                                    LinearGradient(
+                                        colors: [
+                                            Color.white.opacity(0.15),
+                                            Color.white.opacity(0.05),
+                                            Color.clear
+                                        ],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                            
+                            // Border with better contrast
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(
+                                    LinearGradient(
+                                        colors: [
+                                            Color.white.opacity(0.4),
+                                            Color.white.opacity(0.2),
+                                            Color.white.opacity(0.1)
+                                        ],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    ),
+                                    lineWidth: 0.8
+                                )
+                        }
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .scaleEffect(settingsButtonHovered ? 1.05 : 1.0)
+                    .animation(.easeInOut(duration: 0.1), value: settingsButtonHovered)
+                    .onHover { isHovered in
+                        settingsButtonHovered = isHovered
+                    }
                 }
+                .help("Settings")
+                .accessibilityLabel("Open Settings")
             } else {
                 Button(action: {
                     if #available(macOS 13.0, *) {
@@ -216,11 +262,56 @@ struct CurrentUserFooter: View {
                     }
                 }, label: {
                     Image(systemName: "gear")
-                        .font(.system(size: 18))
-                        .opacity(0.75)
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundColor(.white)
+                        .contentShape(Rectangle())
                 })
-                .buttonStyle(.plain)
                 .frame(width: 32, height: 32)
+                .background(
+                    ZStack {
+                        // Main background with better material
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(.regularMaterial)
+                            .shadow(color: .black.opacity(0.2), radius: 2, x: 0, y: 1)
+                        
+                        // Subtle inner highlight
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(
+                                LinearGradient(
+                                    colors: [
+                                        Color.white.opacity(0.15),
+                                        Color.white.opacity(0.05),
+                                        Color.clear
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                        
+                        // Border with better contrast
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(
+                                LinearGradient(
+                                    colors: [
+                                        Color.white.opacity(0.4),
+                                        Color.white.opacity(0.2),
+                                        Color.white.opacity(0.1)
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 0.8
+                            )
+                    }
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .scaleEffect(settingsButtonHovered ? 1.05 : 1.0)
+                .animation(.easeInOut(duration: 0.1), value: settingsButtonHovered)
+                .onHover { isHovered in
+                    settingsButtonHovered = isHovered
+                }
+                .help("Settings")
+                .accessibilityLabel("Open Settings")
             }
         }
         .frame(height: 52)

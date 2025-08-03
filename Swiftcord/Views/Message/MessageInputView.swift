@@ -16,6 +16,7 @@ struct MessageInputView: View {
 	@Binding var replying: MessagesViewModel.ReplyRef?
 	let onSend: (String, [URL]) -> Void
 	let preAttach: (() -> Bool)?
+	let isDisabled: Bool
 	
 	init(
 		placeholder: String,
@@ -23,7 +24,8 @@ struct MessageInputView: View {
 		attachments: Binding<[URL]>,
 		replying: Binding<MessagesViewModel.ReplyRef?>,
 		onSend: @escaping (String, [URL]) -> Void,
-		preAttach: (() -> Bool)? = nil
+		preAttach: (() -> Bool)? = nil,
+		isDisabled: Bool = false
 	) {
 		self.placeholder = placeholder
 		self._message = message
@@ -31,6 +33,7 @@ struct MessageInputView: View {
 		self._replying = replying
 		self.onSend = onSend
 		self.preAttach = preAttach
+		self.isDisabled = isDisabled
 	}
 	
 	var body: some View {
@@ -39,28 +42,18 @@ struct MessageInputView: View {
 			inputSection
 		}
 		.background(
-			LinearGradient(
-				colors: [
-					Color.black.opacity(0.1),
-					Color.black.opacity(0.05)
-				],
-				startPoint: .top,
-				endPoint: .bottom
-			)
+			RoundedRectangle(cornerRadius: 12)
+				.fill(Color.secondary.opacity(0.1))
 		)
-		.overlay(
-			Rectangle()
-				.frame(height: 1)
-				.foregroundColor(Color.gray.opacity(0.3))
-				.offset(y: -0.5)
-		)
+
+
 	}
 	
 	@ViewBuilder
 	private var replySection: some View {
 		if replying != nil {
 			MessageInputReplyView(replying: $replying)
-				.background(.ultraThinMaterial)
+				.background(Color.secondary.opacity(0.1))
 				.clipShape(RoundedRectangle(cornerRadius: 8))
 				.padding(.horizontal, 12)
 				.padding(.top, 8)
@@ -76,14 +69,51 @@ struct MessageInputView: View {
 		.padding(.horizontal, 12)
 		.padding(.vertical, 8)
 		.background(
-			RoundedRectangle(cornerRadius: 12)
-				.fill(.ultraThinMaterial)
-				.overlay(
-					RoundedRectangle(cornerRadius: 12)
-						.stroke(Color.gray.opacity(0.1), lineWidth: 0.5)
-				)
+			// Enhanced liquid glass input container
+			ZStack {
+				// Base glass layer with enhanced blur
+				RoundedRectangle(cornerRadius: 16)
+					.fill(Color.clear)
+					.background(.ultraThinMaterial)
+					.overlay(
+						// Sophisticated border with multiple gradients
+						RoundedRectangle(cornerRadius: 16)
+							.stroke(
+								LinearGradient(
+									colors: [
+										Color.white.opacity(0.4),
+										Color.white.opacity(0.2),
+										Color.white.opacity(0.1),
+										Color.clear
+									],
+									startPoint: .topLeading,
+									endPoint: .bottomTrailing
+								),
+								lineWidth: 1.5
+							)
+					)
+				
+				// Inner glow effect
+				RoundedRectangle(cornerRadius: 16)
+					.fill(
+						RadialGradient(
+							colors: [
+								Color.white.opacity(0.1),
+								Color.clear
+							],
+							center: .topLeading,
+							startRadius: 0,
+							endRadius: 100
+						)
+					)
+			}
 		)
-		.shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
+		.shadow(
+			color: Color.black.opacity(0.15),
+			radius: 12,
+			x: 0,
+			y: 4
+		)
 	}
 	
 	@ViewBuilder
@@ -97,15 +127,63 @@ struct MessageInputView: View {
 	private var textField: some View {
 		TextField(placeholder, text: $message)
 			.textFieldStyle(PlainTextFieldStyle())
-			.padding(.horizontal, 12)
-			.padding(.vertical, 8)
+			.padding(.horizontal, 16)
+			.padding(.vertical, 12)
+			.disabled(isDisabled)
+			.opacity(isDisabled ? 0.5 : 1.0)
 			.background(
-				RoundedRectangle(cornerRadius: 8)
-					.fill(.ultraThinMaterial)
-					.overlay(
-						RoundedRectangle(cornerRadius: 8)
-							.stroke(Color.gray.opacity(0.1), lineWidth: 0.5)
-					)
+				// Enhanced liquid glass text field
+				ZStack {
+					// Base glass layer with enhanced blur
+					RoundedRectangle(cornerRadius: 12)
+						.fill(isDisabled ? Color.gray.opacity(0.1) : Color.clear)
+						.overlay(
+							// Sophisticated border with multiple gradients
+							RoundedRectangle(cornerRadius: 12)
+								.stroke(
+									LinearGradient(
+										colors: [
+											Color.white.opacity(0.5),
+											Color.white.opacity(0.3),
+											Color.white.opacity(0.1),
+											Color.clear
+										],
+										startPoint: .topLeading,
+										endPoint: .bottomTrailing
+									),
+									lineWidth: 1.5
+								)
+						)
+					
+					// Inner glow effect for depth
+					RoundedRectangle(cornerRadius: 12)
+						.fill(
+							RadialGradient(
+								colors: [
+									Color.white.opacity(0.15),
+									Color.clear
+								],
+								center: .topLeading,
+								startRadius: 0,
+								endRadius: 80
+							)
+						)
+					
+					// Subtle inner shadow for depth
+					RoundedRectangle(cornerRadius: 12)
+						.stroke(
+							Color.black.opacity(0.1),
+							lineWidth: 0.5
+						)
+						.blur(radius: 1)
+						.offset(x: 0, y: 1)
+				}
+			)
+			.shadow(
+				color: Color.black.opacity(0.1),
+				radius: 4,
+				x: 0,
+				y: 2
 			)
 			.onSubmit {
 				if !message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -125,19 +203,83 @@ struct MessageInputView: View {
 						Button(action: {
 							attachments.removeAll { $0 == attachment }
 						}) {
-							Text(attachment.lastPathComponent)
-								.padding(.horizontal, 8)
-								.padding(.vertical, 4)
+							HStack(spacing: 4) {
+								Text(attachment.lastPathComponent)
+									.font(.caption)
+								Image(systemName: "xmark.circle.fill")
+									.font(.caption)
+									.foregroundColor(.red)
+							}
+							.padding(.horizontal, 10)
+							.padding(.vertical, 6)
 						}
-						.background(.ultraThinMaterial)
+						.background(
+							// Liquid glass attachment tag
+							ZStack {
+								RoundedRectangle(cornerRadius: 8)
+									.fill(Color.clear)
+									.background(.ultraThinMaterial)
+									.overlay(
+										RoundedRectangle(cornerRadius: 8)
+											.stroke(
+												LinearGradient(
+													colors: [
+														Color.white.opacity(0.3),
+														Color.white.opacity(0.1),
+														Color.clear
+													],
+													startPoint: .topLeading,
+													endPoint: .bottomTrailing
+												),
+												lineWidth: 1
+											)
+									)
+								
+								// Inner glow
+								RoundedRectangle(cornerRadius: 8)
+									.fill(
+										RadialGradient(
+											colors: [
+												Color.white.opacity(0.1),
+												Color.clear
+											],
+											center: .topLeading,
+											startRadius: 0,
+											endRadius: 30
+										)
+									)
+							}
+						)
 						.clipShape(RoundedRectangle(cornerRadius: 8))
 					}
 				}
 				.padding(.horizontal, 12)
 				.padding(.vertical, 8)
 			}
-			.background(.ultraThinMaterial)
-			.clipShape(RoundedRectangle(cornerRadius: 8))
+			.background(
+				// Liquid glass attachments container
+				ZStack {
+					RoundedRectangle(cornerRadius: 10)
+						.fill(Color.clear)
+						.background(.ultraThinMaterial)
+						.overlay(
+							RoundedRectangle(cornerRadius: 10)
+								.stroke(
+									LinearGradient(
+										colors: [
+											Color.white.opacity(0.2),
+											Color.white.opacity(0.1),
+											Color.clear
+										],
+										startPoint: .topLeading,
+										endPoint: .bottomTrailing
+									),
+									lineWidth: 1
+								)
+						)
+				}
+			)
+			.clipShape(RoundedRectangle(cornerRadius: 10))
 		}
 	}
 	
@@ -149,8 +291,47 @@ struct MessageInputView: View {
 			Image(systemName: "arrow.up.circle.fill")
 				.font(.title2)
 				.foregroundColor(.blue)
+				.padding(8)
+				.background(
+					// Liquid glass send button
+					ZStack {
+						Circle()
+							.fill(Color.clear)
+							.background(.ultraThinMaterial)
+							.overlay(
+								Circle()
+									.stroke(
+										LinearGradient(
+											colors: [
+												Color.white.opacity(0.4),
+												Color.white.opacity(0.2),
+												Color.clear
+											],
+											startPoint: .topLeading,
+											endPoint: .bottomTrailing
+										),
+										lineWidth: 1
+									)
+							)
+						
+						// Inner glow
+						Circle()
+							.fill(
+								RadialGradient(
+									colors: [
+										Color.white.opacity(0.1),
+										Color.clear
+									],
+									center: .topLeading,
+									startRadius: 0,
+									endRadius: 20
+								)
+							)
+					}
+				)
+				.clipShape(Circle())
 		}
 		.buttonStyle(.plain)
-		.disabled(message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && attachments.isEmpty)
+		.disabled(isDisabled || (message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && attachments.isEmpty))
 	}
 }

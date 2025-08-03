@@ -13,6 +13,7 @@ import DiscordKitCore
 struct AttachmentView: View {
     let attachment: Attachment
     @State private var quickLookUrl: URL?
+    
 
     // Download state
     @State private var downloadProgress = 0.0
@@ -110,14 +111,13 @@ struct AttachmentView: View {
 					} else {
 						switch mime.prefix(5) {
 						case "image":
-                            Button {
+                            AttachmentImage(
+                                width: width, height: height, scale: scale,
+                                url: resizedURL
+                            )
+                            .onTapGesture {
                                 quickLookUrl = url
-                            } label: {
-                                AttachmentImage(
-                                    width: width, height: height, scale: scale,
-                                    url: resizedURL
-                                )
-                            }.buttonStyle(.borderless)
+                            }
 						case "video":
 							AttachmentVideo(
                                 width: width, height: height, scale: scale,

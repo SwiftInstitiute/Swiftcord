@@ -112,12 +112,23 @@ struct ChannelList: View, Equatable {
 				}
 				if !filteredChannels.isEmpty {
 					VStack(alignment: .leading, spacing: 0) {
-						Text(serverCtx.guild?.properties.isDMChannel == true
-							? "dm"
-							: "server.channel.noCategory"
-						).textCase(.uppercase).padding(.leading, 8)
-						.foregroundColor(.secondary)
-						.font(.caption)
+						// Enhanced liquid glass section header
+						HStack {
+							Text(serverCtx.guild?.properties.isDMChannel == true
+								? "dm"
+								: "server.channel.noCategory"
+							).textCase(.uppercase)
+								.foregroundColor(.secondary)
+								.font(.caption.weight(.medium))
+								.padding(.horizontal, 12)
+								.padding(.vertical, 6)
+								.background(
+									RoundedRectangle(cornerRadius: 4)
+										.fill(Color.secondary.opacity(0.1))
+								)
+								.clipShape(RoundedRectangle(cornerRadius: 6))
+						}
+						.padding(.leading, 8)
 						.padding(.top, 8)
 						.padding(.bottom, 4)
 						
@@ -140,11 +151,22 @@ struct ChannelList: View, Equatable {
 					}.discordSorted()
 					if !channels.isEmpty {
 						VStack(alignment: .leading, spacing: 0) {
-							Text(channel.name ?? "").textCase(.uppercase).padding(.leading, 8)
-								.foregroundColor(.secondary)
-								.font(.caption)
-								.padding(.top, 8)
-								.padding(.bottom, 4)
+							// Enhanced liquid glass category header
+							HStack {
+								Text(channel.name ?? "").textCase(.uppercase)
+									.foregroundColor(.secondary)
+									.font(.caption.weight(.medium))
+									.padding(.horizontal, 12)
+									.padding(.vertical, 6)
+									.background(
+										RoundedRectangle(cornerRadius: 4)
+											.fill(Color.secondary.opacity(0.1))
+									)
+									.clipShape(RoundedRectangle(cornerRadius: 6))
+							}
+							.padding(.leading, 8)
+							.padding(.top, 8)
+							.padding(.bottom, 4)
 							
 							ForEach(channels, id: \.id) { channel in 
 								item(for: channel)
@@ -172,7 +194,12 @@ struct ChannelList: View, Equatable {
 		.environment(\.defaultMinListRowHeight, 1)
 		.padding(.horizontal, 6)
 		.frame(minWidth: 240, maxHeight: .infinity)
-		.background(Color.clear)
+		.background(
+			RoundedRectangle(cornerRadius: 8)
+				.fill(Color.secondary.opacity(0.05))
+		)
+		.clipShape(RoundedRectangle(cornerRadius: 12))
+
 		.environment(\.defaultMinListRowHeight, 1)
 	}
 

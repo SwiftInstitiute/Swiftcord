@@ -92,27 +92,23 @@ struct DayDividerView: View {
     let date: Date
 
     var body: some View {
-        HStack(spacing: 4) {
-            HorizontalDividerView().frame(maxWidth: .infinity)
-            Text(date, style: .date)
-                .font(.callout)
-                .opacity(0.7)
-            HorizontalDividerView().frame(maxWidth: .infinity)
-        }
-        .padding(.top, 16)
+        Text(date, style: .date)
+            .font(.caption)
+            .foregroundColor(.secondary)
+            .padding(.vertical, 8)
+            .padding(.leading, 16)
+            .scaleEffect(x: -1)
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
 struct UnreadDivider: View {
     var body: some View {
-        HStack(spacing: 0) {
-            Rectangle().fill(.red).frame(height: 1).frame(maxWidth: .infinity)
-            Text("New")
-                .textCase(.uppercase).font(.headline)
-                .padding(.horizontal, 4).padding(.vertical, 2)
-                .background(RoundedRectangle(cornerRadius: 4).fill(.red))
-                .foregroundColor(.white)
-        }.padding(.vertical, 4)
+        Text("New")
+            .textCase(.uppercase)
+            .font(.caption)
+            .foregroundColor(.red)
+            .padding(.vertical, 4)
     }
 }
 
@@ -120,23 +116,24 @@ struct UnreadDayDividerView: View {
     let date: Date
     
     var body: some View {
-        HStack(spacing: 0) {
-            HStack(spacing: 4) {
-                HorizontalDividerView(color: .red).frame(maxWidth: .infinity)
-                Text(date, style: .date)
-                    .font(.system(size: 12))
-                    .fontWeight(.medium)
-                    .opacity(0.7)
-                HorizontalDividerView(color: .red).frame(maxWidth: .infinity)
-            }
-            .foregroundColor(.red)
+        VStack(spacing: 4) {
+            Text(date, style: .date)
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .scaleEffect(x: -1)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.leading, 16)
+
             Text("New")
-                .textCase(.uppercase).font(.headline)
-                .padding(.horizontal, 4).padding(.vertical, 2)
-                .background(RoundedRectangle(cornerRadius: 4).fill(.red))
-                .foregroundColor(.white)
+                .textCase(.uppercase)
+                .font(.caption)
+                .foregroundColor(.red)
+                .scaleEffect(x: -1)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.leading, 16)
+
         }
-        .padding(.top, 16)
+        .padding(.vertical, 8)
     }
 }
 
@@ -185,25 +182,7 @@ struct MessagesView: View {
             highlightMsgId: $viewModel.highlightMsg
         )
         .equatable()
-        .listRowBackground(
-            Group {
-                if msg.mentions(gateway.cache.user?.id) {
-                    Color.orange.opacity(0.15)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.orange.opacity(0.3), lineWidth: 1)
-                        )
-                } else if viewModel.highlightMsg == msg.id {
-                    Color.blue.opacity(0.1)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.blue.opacity(0.4), lineWidth: 2)
-                        )
-                } else {
-                    Color.clear
-                }
-            }
-        )
+        .listRowBackground(Color.clear)
         .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
         .onAppear {
             // Queue message for dynamic loading if not already loaded
@@ -275,8 +254,6 @@ struct MessagesView: View {
                             .zeroRowInsets()
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 15)
-                            .background(.ultraThinMaterial)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
                     } else {
                         loadingSkeleton
                             .zeroRowInsets()
@@ -287,12 +264,9 @@ struct MessagesView: View {
                                     viewModel.fetchMessagesTask = nil
                                 }
                             }
-                            .padding(.horizontal, 15)
-                            .background(.ultraThinMaterial)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                                                    .padding(.horizontal, 15)
                     }
                 }
-                .rotationEffect(Angle(degrees: 180))
             }
             .environment(\.defaultMinListRowHeight, 1) // By SwiftUI's logic, 0 is negative so we use 1 instead
             .background(.clear)
@@ -300,7 +274,7 @@ struct MessagesView: View {
             .allowsHitTesting(true)
             .introspectTableView { tableView in
                 tableView.enclosingScrollView!.drawsBackground = false
-//                tableView.enclosingScrollView!.rotate(byDegrees: 180)
+                tableView.enclosingScrollView!.rotate(byDegrees: 180)
                 
                 // Hide scrollbar
                 tableView.enclosingScrollView!.scrollerInsets = NSEdgeInsets(top: 0, left: 0, bottom: 0, right: -20)
@@ -309,7 +283,6 @@ struct MessagesView: View {
                 tableView.rowHeight = -1 // Use automatic row height
                 tableView.usesAutomaticRowHeights = true
             }
-            .rotationEffect(Angle(degrees: 180))
             .allowsHitTesting(true)
             .contentShape(Rectangle())
         }
@@ -362,7 +335,8 @@ struct MessagesView: View {
                 replying: $viewModel.replying,
                 onSend: { message, attachments in
                     sendMessage(with: message, attachments: attachments)
-                }
+                },
+                isDisabled: !hasSendPermission
             )
             .background(.ultraThinMaterial)
             .clipShape(RoundedRectangle(cornerRadius: 12))
@@ -401,14 +375,15 @@ struct MessagesView: View {
                     LottieView(name: "typing-animation", play: .constant(true), width: 160, height: 160)
                         .lottieLoopMode(.loop)
                         .frame(width: 32, height: 24)
-                    Group {
-                        Text(
-                            typingMembers.count <= 2
-                            ? typingMembers.joined(separator: " and ")
-                            : "Several people"
-                        ).fontWeight(.semibold)
-                        + Text(" \(typingMembers.count == 1 ? "is" : "are") typing...")
-                    }.padding(.leading, -4)
+                    					Group {
+						Text(
+							typingMembers.count <= 2
+							? typingMembers.joined(separator: " and ")
+							: "Several people"
+						).fontWeight(.semibold)
+						+ Text(" \(typingMembers.count == 1 ? "is" : "are") typing...")
+					}
+					.padding(.leading, -4)
                 }
                 .padding(.horizontal, 16)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
@@ -578,7 +553,14 @@ extension MessagesView {
           return true
         }
       }
-      viewModel.messages.sort { $0.timestamp > $1.timestamp }
+      // Sort by timestamp with millisecond precision, newest first
+      viewModel.messages.sort { first, second in
+        if first.timestamp == second.timestamp {
+          // If timestamps are equal, sort by message ID for consistent ordering
+          return first.id > second.id
+        }
+        return first.timestamp > second.timestamp
+      }
       viewModel.fetchMessagesTask = nil
     }
   }

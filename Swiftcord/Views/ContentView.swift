@@ -218,6 +218,21 @@ struct ContentView: View {
     private var channelListView: some View {
         VStack(spacing: 0) {
             if let guild = getSelectedGuild() {
+                // Server banner (if exists)
+                if let banner = guild.properties.banner {
+                    AsyncImage(url: banner.bannerURL(of: guild.id, size: 280)) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(height: 120)
+                            .clipped()
+                    } placeholder: {
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.2))
+                            .frame(height: 120)
+                    }
+                }
+                
                 // Header with guild name and search
                 HStack {
                     Text(guild.properties.name == "DMs" ? "Direct Messages" : guild.properties.name)
