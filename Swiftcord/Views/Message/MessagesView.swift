@@ -107,13 +107,37 @@ struct DayDividerView: View {
 struct UnreadDivider: View {
     var body: some View {
         HStack(spacing: 0) {
-            Rectangle().fill(.clear).frame(height: 1).frame(maxWidth: .infinity)
+            Rectangle().fill(.red).frame(height: 1).frame(maxWidth: .infinity)
             Text("New")
                 .textCase(.uppercase).font(.headline)
                 .padding(.horizontal, 4).padding(.vertical, 2)
                 .background(RoundedRectangle(cornerRadius: 4).fill(.red))
                 .foregroundColor(.white)
         }.padding(.vertical, 4)
+    }
+}
+
+struct UnreadDayDividerView: View {
+    let date: Date
+    
+    var body: some View {
+        HStack(spacing: 0) {
+            HStack(spacing: 4) {
+                HorizontalDividerView(color: .red).frame(maxWidth: .infinity)
+                Text(date, style: .date)
+                    .font(.system(size: 12))
+                    .fontWeight(.medium)
+                    .opacity(0.7)
+                HorizontalDividerView(color: .red).frame(maxWidth: .infinity)
+            }
+            .foregroundColor(.red)
+            Text("New")
+                .textCase(.uppercase).font(.headline)
+                .padding(.horizontal, 4).padding(.vertical, 2)
+                .background(RoundedRectangle(cornerRadius: 4).fill(.red))
+                .foregroundColor(.white)
+        }
+        .padding(.top, 16)
     }
 }
 
@@ -142,7 +166,7 @@ struct MessagesView: View {
     }
 
     @_transparent @_optimize(speed) @ViewBuilder
-    func cell(for msg: Message, shrunk: Bool) -> some View {
+    func cell(for msg: Message, shrunk: Bool, proxy: ScrollViewProxy) -> some View {
         MessageView(
             message: msg,
             prevMessage: viewModel.messages.after(msg),
@@ -152,7 +176,7 @@ struct MessagesView: View {
                 $0.id == msg.message_reference!.message_id
             } : nil,
             onQuoteClick: { id in
-                // withAnimation { proxy.scrollTo(id, anchor: .center) }
+                withAnimation { proxy.scrollTo(id, anchor: .center) }
                 viewModel.highlightMsg = id
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     if viewModel.highlightMsg == id { viewModel.highlightMsg = nil }
@@ -165,24 +189,35 @@ struct MessagesView: View {
         .listRowBackground(msg.mentions(gateway.cache.user?.id) ? Color.orange.opacity(0.1) : .clear)
     }
 
-    private var history: some View {
-        return ForEach(Array(viewModel.messages.enumerated()), id: \.1.id) { (idx, msg) in
-            let isLastItem = idx == viewModel.messages.count-1
-            let nextMsg = idx + 1 < viewModel.messages.count ? viewModel.messages[idx + 1] : nil
-            let shrunk = !isLastItem && nextMsg != nil && msg.messageIsShrunk(prev: nextMsg!)
-
-            cell(for: msg, shrunk: shrunk)
-
-            if !isLastItem, let channelID = serverCtx.channel?.id, let nextMsg = nextMsg {
-                let newMsg = gateway.readState[channelID]?.last_message_id?.stringValue == nextMsg.id
-
-                if newMsg { UnreadDivider() }
-                if !shrunk && !newMsg {
-                    Spacer(minLength: 16)
+    func history(proxy: ScrollViewProxy) -> some View {
+        let messages = viewModel.messages
+        return ForEach(Array(messages.enumerated()), id: \.1.id) { (idx, msg) in
+            let isLastItem = msg.id == messages.last?.id
+            let shrunk = !isLastItem && msg.messageIsShrunk(prev: messages.after(msg))
+            
+            let newDay = isLastItem && viewModel.reachedTop || !isLastItem && !msg.timestamp.isSameDay(as: messages.after(msg)?.timestamp)
+            
+            var newMsg: Bool {
+                if !isLastItem, let channelID = serverCtx.channel?.id {
+                    return gateway.readState[channelID]?.last_message_id?.stringValue == messages.after(msg)?.id ?? "1"
                 }
+                return false
             }
-
-            if !isLastItem && nextMsg != nil && !msg.timestamp.isSameDay(as: nextMsg!.timestamp) {
+            
+            cell(for: msg, shrunk: shrunk, proxy: proxy)
+                .id(msg.id)
+            
+            if !newDay && newMsg {
+                UnreadDivider()
+                    .id("unread")
+            }
+            if !shrunk && !newMsg {
+                Spacer(minLength: 16 - MessageView.lineSpacing / 2)
+            }
+            
+            if newDay && newMsg {
+                UnreadDayDividerView(date: msg.timestamp)
+            } else if newDay {
                 DayDividerView(date: msg.timestamp)
             }
         }
@@ -192,111 +227,125 @@ struct MessagesView: View {
     private var historyList: some View {
         ScrollViewReader { proxy in
             List {
-                Spacer(minLength: max(messageInputHeight-44-7, 0) + (viewModel.showingInfoBar ? 24 : 0)).zeroRowInsets()
-
-                if viewModel.reachedTop {
-                    MessagesViewHeader(chl: serverCtx.channel).zeroRowInsets()
-                } else {
-                    loadingSkeleton
-                        .zeroRowInsets()
-                        .onAppear { if viewModel.fetchMessagesTask == nil { fetchMoreMessages() } }
-                        .onDisappear {
-                            if let loadTask = viewModel.fetchMessagesTask {
-                                loadTask.cancel()
-                                viewModel.fetchMessagesTask = nil
+                Group {
+                    Spacer(minLength: max(messageInputHeight-74, 10) + (viewModel.showingInfoBar ? 24 : 0)).zeroRowInsets()
+                        .id("1")
+                    
+                    history(proxy: proxy)
+                        .onAppear {
+                            withAnimation {
+                                // Already starts at very bottom, but just in case anyway
+                                // Scroll to very bottom if read, otherwise scroll to message
+                                if gateway.readState[serverCtx.channel?.id ?? "1"]?.last_message_id?.stringValue ?? "1" == viewModel.messages.first?.id ?? "1" {
+                                    proxy.scrollTo("1", anchor: .bottom)
+                                } else {
+                                    proxy.scrollTo("unread", anchor: .bottom)
+                                }
                             }
                         }
+                    
+                    
+                    if viewModel.reachedTop {
+                        MessagesViewHeader(chl: serverCtx.channel)
+                            .zeroRowInsets()
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 15)
+                    } else {
+                        loadingSkeleton
+                            .zeroRowInsets()
+                            .onAppear { if viewModel.fetchMessagesTask == nil { fetchMoreMessages() } }
+                            .onDisappear {
+                                if let loadTask = viewModel.fetchMessagesTask {
+                                    loadTask.cancel()
+                                    viewModel.fetchMessagesTask = nil
+                                }
+                            }
+                            .padding(.horizontal, 15)
+                    }
                 }
-
-                history
+                .rotationEffect(Angle(degrees: 180))
             }
-            .listStyle(.plain)
-            .background(Color.clear)
-            .environment(\.defaultMinListRowHeight, 0)
-            .environment(\.defaultMinListHeaderHeight, 0)
+            .environment(\.defaultMinListRowHeight, 1) // By SwiftUI's logic, 0 is negative so we use 1 instead
+            .background(.clear)
+            .padding(.top, 74) // Ensure List doesn't go below text input field (and its border radius)
             .introspectTableView { tableView in
-                tableView.backgroundColor = .clear
                 tableView.enclosingScrollView!.drawsBackground = false
-                tableView.enclosingScrollView!.scrollerInsets = NSEdgeInsets(top: 0, left: 0, bottom: 52, right: 0)
+//                tableView.enclosingScrollView!.rotate(byDegrees: 180)
+                
+                // Hide scrollbar
+                tableView.enclosingScrollView!.scrollerInsets = NSEdgeInsets(top: 0, left: 0, bottom: 0, right: -20)
             }
-            .frame(maxHeight: .infinity)
-            .padding(.bottom, 24 + 7) // Ensure List doesn't go below text input field (and its border radius) // hack to make the list scroll up
+            .rotationEffect(Angle(degrees: 180))
         }
-    }
-
-    private var messageInputPlaceholder: LocalizedStringKey {
-        if serverCtx.channel?.type == .dm {
-            return LocalizedStringKey("dm.composeMsg.hint \(serverCtx.channel?.label(gateway.cache.users) ?? "")")
-        } else if serverCtx.channel?.type == .groupDM {
-            return LocalizedStringKey("dm.group.composeMsg.hint \(serverCtx.channel?.label(gateway.cache.users) ?? "")")
-        } else {
-            return LocalizedStringKey("server.composeMsg.hint \(serverCtx.channel?.label(gateway.cache.users) ?? "")")
-        }
-    }
-    
-    private var typingMembers: [String] {
-        if serverCtx.channel == nil {
-            return []
-        } else {
-            return serverCtx.typingStarted[serverCtx.channel!.id]?
-                .map { $0.member?.nick ?? $0.member?.user!.displayName ?? "" } ?? []
-        }
-    }
-    
-    private var typingOverlay: some View {
-        Group {
-            if !typingMembers.isEmpty {
-                HStack {
-                    // The dimensions are quite arbitrary
-                    // FIXME: The animation broke, will have to fix it
-                    LottieView(name: "typing-animatiokn", play: .constant(true), width: 160, height: 160)
-                        .lottieLoopMode(.loop)
-                        .frame(width: 32, height: 24)
-                    Group {
-                        Text(
-                            typingMembers.count <= 2
-                            ? typingMembers.joined(separator: " and ")
-                            : "Several people"
-                        ).fontWeight(.semibold)
-                        + Text(" \(typingMembers.count == 1 ? "is" : "are") typing...")
-                    }.padding(.leading, -4)
-                }
-                .padding(.horizontal, 16)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
-            } else {
-                EmptyView()
-            }
-        }
-    }
-
-    private var messageInputView: some View {
-        MessageInputView(
-            placeholder: messageInputPlaceholder,
-            message: $viewModel.newMessage, 
-            attachments: $viewModel.attachments, 
-            replying: $viewModel.replying,
-            onSend: sendMessage,
-            preAttach: preAttachChecks
-        )
-        .onAppear { viewModel.newMessage = "" }
-        .onChange(of: viewModel.newMessage) { content in
-            if content.count > viewModel.newMessage.count,
-               Date().timeIntervalSince(viewModel.lastSentTyping) > 8 { // swiftlint:disable:this indentation_width
-                // Send typing start msg once every 8s while typing
-                viewModel.lastSentTyping = Date()
-                Task {
-                    _ = try? await restAPI.typingStart(id: serverCtx.channel!.id)
-                }
-            }
-        }
-        .overlay(typingOverlay)
-        .heightReader($messageInputHeight)
     }
 
     private var inputContainer: some View {
         ZStack(alignment: .topLeading) {
             MessageInfoBarView(isShown: $viewModel.showingInfoBar, state: $viewModel.infoBarData)
-            messageInputView
+
+            let hasSendPermission: Bool = {
+                guard let guildID = serverCtx.guild?.id, let member = serverCtx.member else {
+                    return false
+                }
+                return serverCtx.channel?.computedPermissions(
+                    guildID: guildID, member: member, basePerms: serverCtx.basePermissions
+                )
+                .contains(.sendMessages) ?? true
+            }()
+
+            MessageInputView(
+                placeholder: hasSendPermission ?
+                (serverCtx.channel?.type == .dm
+                 ? "dm.composeMsg.hint \(serverCtx.channel?.label(gateway.cache.users) ?? "")"
+                 : (serverCtx.channel?.type == .groupDM
+                    ? "dm.group.composeMsg.hint \(serverCtx.channel?.label(gateway.cache.users) ?? "")"
+                    : "server.composeMsg.hint \(serverCtx.channel?.label(gateway.cache.users) ?? "")"
+                   )
+                )
+                : "You do not have permission to send messages in this channel.",
+                message: $viewModel.newMessage, attachments: $viewModel.attachments, replying: $viewModel.replying,
+                onSend: sendMessage,
+                preAttach: preAttachChecks
+            )
+            .disabled(!hasSendPermission)
+            .onAppear { viewModel.newMessage = "" }
+            .onChange(of: viewModel.newMessage) { content in
+                if content.count > viewModel.newMessage.count,
+                   Date().timeIntervalSince(viewModel.lastSentTyping) > 8 { // swiftlint:disable:this indentation_width
+                    // Send typing start msg once every 8s while typing
+                    viewModel.lastSentTyping = Date()
+                    Task {
+                        _ = try? await restAPI.typingStart(id: serverCtx.channel!.id)
+                    }
+                }
+            }
+            .overlay {
+                let typingMembers = serverCtx.channel == nil
+                ? []
+                : serverCtx.typingStarted[serverCtx.channel!.id]?
+                    .map { $0.member?.nick ?? $0.member?.user?.username ?? "" } ?? []
+
+                if !typingMembers.isEmpty {
+                    HStack {
+                        // The dimensions are quite arbitrary
+                        // FIXME: The animation broke, will have to fix it
+                        LottieView(name: "typing-animatiokn", play: .constant(true), width: 160, height: 160)
+                            .lottieLoopMode(.loop)
+                            .frame(width: 32, height: 24)
+                        Group {
+                            Text(
+                                typingMembers.count <= 2
+                                ? typingMembers.joined(separator: " and ")
+                                : "Several people"
+                            ).fontWeight(.semibold)
+                            + Text(" \(typingMembers.count == 1 ? "is" : "are") typing...")
+                        }.padding(.leading, -4)
+                    }
+                    .padding(.horizontal, 16)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                }
+            }
+            .heightReader($messageInputHeight)
         }
     }
 
