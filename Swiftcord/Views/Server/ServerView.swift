@@ -161,9 +161,12 @@ struct ServerView: View {
       .environmentObject(serverCtx)
       .navigationTitle("")
       .background(Color(NSColor.controlBackgroundColor))
+      .navigationSplitViewColumnWidth(280)
+      .background(Color(NSColor.controlBackgroundColor))
+      .coordinateSpace(name: "titleBar")
       .toolbar {
         ToolbarItemGroup(placement: .navigation) {
-          HStack(spacing: 8) {
+          HStack(spacing: 12) {
             Button {
               NSApp.keyWindow?.firstResponder?.tryToPerform(#selector(NSSplitViewController.toggleSidebar(_:)), with: nil)
             } label: {
@@ -180,6 +183,10 @@ struct ServerView: View {
               .font(.title2)
               .fontWeight(.semibold)
           }
+          .padding(.horizontal, 16)
+          .padding(.vertical, 10)
+          .background(Color(NSColor.controlBackgroundColor))
+          .cornerRadius(8)
         }
         
         ToolbarItemGroup(placement: .primaryAction) {
@@ -193,6 +200,10 @@ struct ServerView: View {
             .buttonStyle(.plain)
             .frame(width: 20, height: 20)
           }
+          .padding(.horizontal, 16)
+          .padding(.vertical, 10)
+          .background(Color(NSColor.controlBackgroundColor))
+          .cornerRadius(8)
         }
       }
       .onChange(of: audioManager.queue.count) { [oldCount = audioManager.queue.count] count in
@@ -243,6 +254,7 @@ struct ServerView: View {
       .onDisappear {
         if let evtID = evtID { _ = gateway.onEvent.removeHandler(handler: evtID) }
       }
+      .background(Color(NSColor.controlBackgroundColor))
     }
   }
 }

@@ -191,7 +191,6 @@ struct MessagesView: View {
                 DayDividerView(date: msg.timestamp)
             }
         }
-        .flip()
         .zeroRowInsets()
         .fixedSize(horizontal: false, vertical: true)
     }
@@ -203,11 +202,10 @@ struct MessagesView: View {
                 history
 
                 if viewModel.reachedTop {
-                    MessagesViewHeader(chl: serverCtx.channel).zeroRowInsets().flip()
+                    MessagesViewHeader(chl: serverCtx.channel).zeroRowInsets()
                 } else {
                     loadingSkeleton
                         .zeroRowInsets()
-                        .flip()
                         .onAppear { if viewModel.fetchMessagesTask == nil { fetchMoreMessages() } }
                         .onDisappear {
                             if let loadTask = viewModel.fetchMessagesTask {
@@ -224,10 +222,8 @@ struct MessagesView: View {
             .introspectTableView { tableView in
                 tableView.backgroundColor = .clear
                 tableView.enclosingScrollView!.drawsBackground = false
-                tableView.enclosingScrollView!.rotate(byDegrees: 180)
                 tableView.enclosingScrollView!.scrollerInsets = NSEdgeInsets(top: 0, left: 0, bottom: 52, right: 0)
             }
-            .scaleEffect(x: -1, y: 1, anchor: .center)
             .frame(maxHeight: .infinity)
             .padding(.bottom, 24 + 7) // Ensure List doesn't go below text input field (and its border radius)
         }
