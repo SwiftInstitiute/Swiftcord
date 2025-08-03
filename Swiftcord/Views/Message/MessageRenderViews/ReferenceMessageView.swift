@@ -13,7 +13,7 @@ import CachedAsyncImage
 struct ReferenceMessageView: View {
 	let referencedMsg: Message?
 
-	@EnvironmentObject var serverCtx: ServerContext
+	@EnvironmentObject var state: UIState
 
     var body: some View {
 		HStack(alignment: .top, spacing: 4) {
@@ -25,18 +25,18 @@ struct ReferenceMessageView: View {
 				.padding(.bottom, -12)
 				.padding(.trailing, -30)
 
-			Group {
+			VStack(alignment: .leading, spacing: 2) {
 				if let quotedMsg = referencedMsg {
 					if MessageView.defaultTypes.contains(quotedMsg.type) {
 						UserAvatarView(
 							user: quotedMsg.author,
-							guildID: serverCtx.guild?.id,
+							guildID: state.serverCtx.guild?.id,
 							webhookID: quotedMsg.webhook_id,
 							size: 16
 						)
 
 						Group {
-							Text(quotedMsg.author.displayName)
+							Text(quotedMsg.author.displayName ?? quotedMsg.author.global_name ?? quotedMsg.author.username)
 								.font(.body)
 								.opacity(0.9)
 
@@ -69,9 +69,10 @@ struct ReferenceMessageView: View {
 						}
 					}
 				} else {
-					Image(systemName: "arrowshape.turn.up.left.circle.fill")
-						.font(.system(size: 16))
-						.frame(width: 16, height: 16)
+					HStack(spacing: 4) {
+						Image(systemName: "arrowshape.turn.up.left.circle.fill")
+							.font(.system(size: 16))
+							.frame(width: 16, height: 16)
 
 					Text("message.gone")
 						.italic()

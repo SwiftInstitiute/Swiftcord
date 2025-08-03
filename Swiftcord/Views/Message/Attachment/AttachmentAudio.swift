@@ -13,13 +13,13 @@ struct AttachmentAudio: View {
 	let url: URL
 
 	@EnvironmentObject var audioManager: AudioCenterManager
-	@EnvironmentObject var serverCtx: ServerContext
+	@EnvironmentObject var state: UIState
 
 	private func queueSong() {
 		audioManager.append(
 			source: url,
 			filename: attachment.filename,
-			from: "\(serverCtx.guild!.properties.name) > #\(serverCtx.channel?.name ?? "")"
+			                        from: "\(state.serverCtx.guild!.properties.name) > #\(state.serverCtx.channel?.name ?? "")"
 		)
 	}
 

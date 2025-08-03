@@ -7,10 +7,20 @@
 
 import DiscordKitCore
 
+// Temporary inline Permissions extension until Permissions+.swift is added to project
+extension Permissions {
+	static let all: Permissions = .init(rawValue: 0x7FFFFFFFFFFF)
+
+	mutating func applyOverwrite(_ overwrite: PermOverwrite) {
+		remove(overwrite.deny)
+		formUnion(overwrite.allow)
+	}
+}
+
 extension Channel {
 	func label(_ users: [Snowflake: User] = [:]) -> String? {
 		name ?? recipient_ids?
-			.compactMap { users[$0]?.displayName }
+			.compactMap { users[$0]?.global_name ?? users[$0]?.username }
 			.joined(separator: ", ")
 	}
 }

@@ -1,21 +1,26 @@
 //
-//  UserSettingsAccount.swift
+//  UserSettingsAccountView.swift
 //  Swiftcord
 //
 //  Created by royal on 14/05/2022.
 //
 
 import SwiftUI
+import DiscordKit
 import DiscordKitCore
 import CachedAsyncImage
 
-struct UserSettingsAccount: View {
+struct UserSettingsAccountView: View {
 	let user: CurrentUser
 
 	@State private var changePwSheetShown = false
 	@State private var oldPw = ""
 	@State private var newPw = ""
 	@State private var confirmNewPw = ""
+    
+    @EnvironmentObject var gateway: DiscordGateway
+    @EnvironmentObject var state: UIState
+    @EnvironmentObject var switcher: AccountSwitcher
 
 	var changePwDialog: some View {
         DialogView(title: "settings.user.chPwd.title", description: "settings.user.chPwd.caption") {
@@ -48,6 +53,15 @@ struct UserSettingsAccount: View {
             .frame(width: 100, height: 100)
             Text(user.displayName).font(.title2)
             Text(user.email)
+
+            GroupBox {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("settings.user.phoneNum").textCase(.uppercase).font(.headline).opacity(0.75)
+                    Text(user.phone ?? "You haven't added a phone number yet.")
+                        .font(.system(size: 16))
+                        .textSelection(.enabled)
+                }.padding(10).frame(maxWidth: .infinity)
+			}
 
             GroupBox {
                 VStack(alignment: .leading, spacing: 8) {
@@ -87,6 +101,28 @@ struct UserSettingsAccount: View {
                 .padding(10)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
+            GroupBox {
+                VStack(alignment: .leading){
+                    Text("settings.user.logOut").font(.title2)
+                }
+                Divider()
+                VStack(alignment: .center){
+                    Button("settings.user.logOut", role: .destructive) {
+                        Task {
+                            await switcher.logOut(id: user.id)
+                            if switcher.accounts.isEmpty {
+                                gateway.disconnect()
+                                state.attemptLogin = true
+                                state.loadingState = .initial
+                            } else {
+                                switchAccount() // Switch to the next available account
+                            }
+                        }
+                    }
+                }
+                .buttonStyle(FlatButtonStyle())
+                .controlSize(.small)
+            }
 
 			Group {
 				Text("ACCOUNT REMOVAL")
@@ -109,24 +145,36 @@ struct UserSettingsAccount: View {
 			}
 		}
 	}
+    private func switchAccount() {
+        switcher.setActiveAccount(id: user.id)
+        guard let newToken = switcher.getActiveToken() else {
+            AccountRow.log.error("No active token associated with account. This should never happen!")
+            return
+        }
+        state.loadingState = .initial
+        gateway.disconnect()
+        restAPI.setToken(token: newToken)
+        gateway.connect(token: newToken)    }
 }
 
-struct PasswordField: View {
-    let placeholder: String
-    let prompt: String
-    @Binding var password: String
+private extension UserSettingsAccountView {
+	struct PasswordField: View {
+		let placeholder: String
+		let prompt: String
+		@Binding var password: String
 
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(placeholder)
-                .font(.headline)
-                .textCase(.uppercase)
-                .foregroundColor(.secondary)
-            SecureField(placeholder, text: $password, prompt: Text(prompt))
-                .textFieldStyle(.roundedBorder)
-                .controlSize(.large)
-                .textFieldStyle(.roundedBorder)
-                .labelsHidden()
-        }
-    }
+		var body: some View {
+			VStack(alignment: .leading, spacing: 8) {
+				Text(placeholder)
+					.font(.headline)
+					.textCase(.uppercase)
+					.foregroundColor(.secondary)
+
+				SecureField(placeholder, text: $password, prompt: Text(prompt))
+					.textFieldStyle(.roundedBorder)
+					.controlSize(.large)
+					.textFieldStyle(.roundedBorder)
+			}
+		}
+	}
 }

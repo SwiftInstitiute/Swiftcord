@@ -12,13 +12,12 @@ import DiscordKitCore
 struct SettingsView: View {
     @EnvironmentObject var gateway: DiscordGateway
 
+	@AppStorage("local.newSettingsUI") private var newUI = true
+
     var body: some View {
         if let user = gateway.cache.user {
-			if #available(macOS 13.0, *) {
+			if #available(macOS 13.0, *), newUI {
 				ModernSettings(user: user)
-					.removeSidebarToggle { window in
-						window.toolbarStyle = .unified
-					}
 			} else {
 				LegacySettings(user: user)
 			}
@@ -61,19 +60,14 @@ private extension SettingsView {
 	struct ModernSettings: View {
 		let user: CurrentUser
 
-		@State private var showingDetail = false
-
 		private struct Page: Hashable, Identifiable {
-			internal init(_ name: Name, icon: Icon? = nil, showName: Bool = true, children: [SettingsView.ModernSettings.Page] = []) {
+			internal init(_ name: Name, icon: Icon? = nil, children: [SettingsView.ModernSettings.Page] = []) {
 				self.children = children
 				self.name = name
 				self.icon = icon
-				self.showName = showName
 			}
 
 			var id: String { name.rawValue }
-
-			let showName: Bool
 
 			let children: [Page]
 			let name: Name
@@ -91,7 +85,6 @@ private extension SettingsView {
 			}
 
 			enum Name: String {
-				case userProfileSection = "Profile"
 				// MARK: User Settings
 				case userSection = "User Settings"
 				case account = "My Account"
@@ -117,48 +110,36 @@ private extension SettingsView {
 				case keybinds = "settings.app.keybinds"
 				case lang = "settings.app.lang"
 				case streamer = "settings.app.streamer"
-				// MARK: Misc
-				case miscSection = "Misc"
-				case about = "About"
-				case credits = "Credits"
-				// MARK: Developer
-				case devSection = "Dev"
 				case advanced = "settings.app.advanced"
-				case diag = "Diagnostics"
+				case credits = "settings.app.credits"
+				case debug = "settings.app.debug"
 			}
 		}
 		private static let pages: [Page] = [
-			Page(.userProfileSection, showName: false, children: [
-				Page(.account, icon: .init(baseColor: .blue, icon: .system("person.fill")))
+			.init(.userSection, children: [
+				.init(.account, icon: .init(baseColor: .blue, icon: .system("person.fill"))),
+				.init(.profile, icon: .init(baseColor: .blue, icon: .system("person.crop.circle"))),
+				.init(.privacy, icon: .init(baseColor: .red, icon: .system("shield.lefthalf.filled")))
 			]),
-			Page(.userSection, children: [
-				Page(.profile, icon: .init(baseColor: .blue, icon: .system("person.crop.circle"))),
-				Page(.privacy, icon: .init(baseColor: .red, icon: .system("shield.lefthalf.filled")))
+			.init(.paymentSection, children: [
+				.init(.nitro, icon: .init(baseColor: .gray, icon: .asset("NitroSubscriber"))),
+				.init(.boost, icon: .init(baseColor: .green, icon: .system("person.crop.circle"))),
+				.init(.subscriptions, icon: .init(baseColor: .blue, icon: .system("person.crop.circle"))),
+				.init(.gift, icon: .init(baseColor: .blue, icon: .system("person.crop.circle"))),
+				.init(.billing, icon: .init(baseColor: .blue, icon: .system("person.crop.circle")))
 			]),
-			Page(.paymentSection, children: [
-				Page(.nitro, icon: .init(baseColor: .white, icon: .asset("NitroSubscriber"))),
-				Page(.boost, icon: .init(baseColor: .init("NitroPink"), icon: .asset("ServerBoost"))),
-				Page(.subscriptions, icon: .init(baseColor: .purple, icon: .system("wallet.pass.fill"))),
-				Page(.gift, icon: .init(baseColor: .purple, icon: .system("gift.fill"))),
-				Page(.billing, icon: .init(baseColor: .purple, icon: .system("creditcard.fill")))
-			]),
-			Page(.appSection, children: [
-				Page(.appearance, icon: .init(baseColor: .black, icon: .system("circle.lefthalf.filled"))),
-				Page(.accessibility, icon: .init(baseColor: .blue, icon: .system("figure.wave.circle"))),
-				Page(.voiceVideo, icon: .init(baseColor: .red, icon: .system("waveform"))),
-				Page(.textImages, icon: .init(baseColor: .red, icon: .system("text.below.photo.fill"))),
-				Page(.notifs, icon: .init(baseColor: .blue, icon: .system("bell.badge.fill"))),
-				Page(.keybinds, icon: .init(baseColor: .blue, icon: .system("keyboard.fill"))),
-				Page(.lang, icon: .init(baseColor: .blue, icon: .system("globe"))),
-				Page(.streamer, icon: .init(baseColor: .blue, icon: .system("camera.on.rectangle.fill")))
-			]),
-			Page(.miscSection, showName: false, children: [
-				Page(.about, icon: .init(baseColor: .gray, icon: .system("info"))),
-				Page(.credits, icon: .init(baseColor: .gray, icon: .system("person.2.fill")))
-			]),
-			Page(.devSection, showName: false, children: [
-				Page(.advanced, icon: .init(baseColor: .gray, icon: .system("hammer.fill"))),
-				Page(.diag, icon: .init(baseColor: .gray, icon: .system("wrench.adjustable.fill")))
+			.init(.appSection, children: [
+				.init(.appearance, icon: .init(baseColor: .black, icon: .system("person.crop.circle"))),
+				.init(.accessibility, icon: .init(baseColor: .blue, icon: .system("person.crop.circle"))),
+				.init(.voiceVideo, icon: .init(baseColor: .blue, icon: .system("person.crop.circle"))),
+				.init(.textImages, icon: .init(baseColor: .blue, icon: .system("person.crop.circle"))),
+				.init(.notifs, icon: .init(baseColor: .blue, icon: .system("person.crop.circle"))),
+				.init(.keybinds, icon: .init(baseColor: .blue, icon: .system("person.crop.circle"))),
+				.init(.lang, icon: .init(baseColor: .blue, icon: .system("person.crop.circle"))),
+				.init(.streamer, icon: .init(baseColor: .blue, icon: .system("person.crop.circle"))),
+				.init(.advanced, icon: .init(baseColor: .blue, icon: .system("person.crop.circle"))),
+				.init(.credits, icon: .init(baseColor: .blue, icon: .system("person.crop.circle"))),
+				.init(.debug, icon: .init(baseColor: .blue, icon: .system("person.crop.circle")))
 			])
 		]
 
@@ -175,7 +156,7 @@ private extension SettingsView {
 								.frame(width: 40, height: 40)
 								.clipShape(Circle())
 							VStack(alignment: .leading) {
-								Text(user.username).font(.headline)
+								Text(user.displayName).font(.headline)
 								Text("Discord Account").font(.caption)
 							}
 						}
@@ -184,15 +165,15 @@ private extension SettingsView {
 							Text(item.nameString)
 						} icon: {
 							if let icon = item.icon {
-								Group {
+								VStack {
 									switch icon.icon {
 									case .system(let name):
 										Image(systemName: name)
 									case .asset(let name):
-										Image(name).resizable().aspectRatio(contentMode: .fit).padding(2)
+										Image(name).resizable().padding(2)
 									}
 								}
-								.foregroundColor(.white)
+								.foregroundColor(.primary)
 								.frame(width: 20, height: 20)
 								.background(RoundedRectangle(cornerRadius: 5, style: .continuous).fill(icon.baseColor.gradient))
 							} else {
@@ -207,38 +188,26 @@ private extension SettingsView {
 		var body: some View {
 			NavigationSplitView {
 				List(Self.pages, selection: $selectedPage) { category in
-					if category.showName {
-						Section(category.nameString) {
-							ForEach(category.children) { child in
-								navigationItem(item: child)
-							}
-						}
-					} else {
-						Section {
-							ForEach(category.children) { child in
-								navigationItem(item: child)
-							}
+					Section(category.nameString) {
+						ForEach(category.children) { child in
+							navigationItem(item: child)
 						}
 					}
-				}
-				.navigationSplitViewColumnWidth(215)
+				}.navigationSplitViewColumnWidth(215)
 			} detail: {
 				ScrollView {
-					Form {
+					Group {
 						switch selectedPage.name {
-						// MARK: User Settings
-						case .account:
-							AccountOverview(user: user)
-						case .profile:
-							UserSettingsProfileView(user: user)
-						case .privacy:
-							UserSettingsPrivacySafetyView()
-
-						// MARK: App Settings
 						case .appearance:
 							AppSettingsAppearanceView()
 						case .accessibility:
 							AppSettingsAccessibilityView()
+						case .account:
+							UserSettingsAccount(user: user)
+						case .profile:
+							UserSettingsProfileView(user: user)
+						case .privacy:
+							UserSettingsPrivacySafetyView()
 						// MARK: Text and Images
 						case .textImages:
 							AppSettingsTextAndImagesView()
@@ -250,37 +219,18 @@ private extension SettingsView {
 						// MARK: Developer
 						case .advanced:
 							AppSettingsAdvancedView()
-						case .diag:
+						case .credits:
+							CreditsView()
+						case .debug:
 							DebugSettingsView()
 						default:
-							// Concatenate texts so LocalizedStrings work
-							Text("Unimplemented view: ") + Text(selectedPage.nameString)
+							Text("Unimplemented view: \(selectedPage.name.rawValue)")
 						}
-					}
-					.formStyle(.grouped)
-				}
-				.navigationSplitViewColumnWidth(500)
-				.removeSidebarToggle()
-				.onAppear {
-					showingDetail = false
-				}
-				.onDisappear {
-					showingDetail = true
-				}
+					}.padding(20)
+				}.navigationSplitViewColumnWidth(500)
 			}
 			.searchable(text: $filter, placement: .sidebar)
 			.navigationTitle(selectedPage.nameString)
-			.toolbar {
-				ToolbarItem(placement: .navigation) {
-					if !showingDetail {
-						Rectangle()
-							.frame(width: 10)
-							.opacity(0)
-					} else {
-						EmptyView()
-					}
-				}
-			}
 			.frame(minHeight: 470)
 		}
 	}

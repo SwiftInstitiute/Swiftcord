@@ -41,6 +41,7 @@ struct MessageView: View, Equatable {
     }
 
     let message: Message
+    let prevMessage: Message?
     let shrunk: Bool
     let quotedMsg: Message?
     let onQuoteClick: (Snowflake) -> Void
@@ -65,11 +66,14 @@ struct MessageView: View, Equatable {
         VStack(alignment: .leading, spacing: 6) {
             // This message is a reply!
             if message.type == .reply {
-				ReferenceMessageView(referencedMsg: message.referenced_message).onTapGesture {
-					if let referencedID = message.referenced_message?.id {
-						onQuoteClick(referencedID)
-					}
-				}
+                Button {
+                    if let referencedID = message.referenced_message?.id {
+                        onQuoteClick(referencedID)
+                    }
+                } label: {
+                    ReferenceMessageView(referencedMsg: message.referenced_message)
+                }
+                .buttonStyle(.borderless)
             }
             HStack(
                 alignment: MessageView.defaultTypes.contains(message.type) ? .top : .center,
@@ -119,6 +123,7 @@ struct MessageView: View, Equatable {
         }
         .padding(.trailing, 32)
 		.padding(.vertical, Self.lineSpacing / 2)
+        .padding(.horizontal, 15)
 		.background(
 			Rectangle()
 				.fill(.blue)
@@ -159,6 +164,12 @@ struct MessageView: View, Equatable {
 						Text("Edit")
 					}
 				}
+                
+                Button(action: { Task { await readMessage() } }) {
+                    Image(systemName: "message.badge")
+                    Text("Mark as unread")
+                }
+                
 				Button(role: .destructive, action: deleteMessage) {
 					Image(systemName: "xmark.bin.fill")
 					Text("Delete Message").foregroundColor(.red)
@@ -209,6 +220,20 @@ private extension MessageView {
 	func editMessage() {
 		print(#function)
 	}
+    
+    func readMessage() async {
+        do {
+            let id = Int(floor((message.id as NSString).doubleValue / pow(2, 22)) - 1)
+            var defaultId: Snowflake
+            if id < 0 {
+                defaultId = "0"
+            } else {
+                defaultId = String(id << 22)
+            }
+            
+            let _ = try await restAPI.ackMessageRead(id: message.channel_id, msgID: prevMessage?.id ?? defaultId, manual: true, mention_count: 0)
+        } catch {}
+    }
 
 	func deleteMessage() {
 		Task {

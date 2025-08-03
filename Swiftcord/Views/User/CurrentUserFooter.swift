@@ -15,67 +15,77 @@ import os
 struct CurrentUserFooter: View {
     let user: CurrentUser
 
-	@State var customStatusPresented = false
-	@State var userPopoverPresented = false
-	@State var switcherPresented = false
-	@State var loginPresented = false
-	@State var showQR = false
-	@State var switcherHelpPresented = false
-	@State var settingPresence = false
+    @State var customStatusPresented = false
+    @State var userPopoverPresented = false
+    @State var switcherPresented = false
+    @State var loginPresented = false
+    @State var showQR = false
+    @State var switcherHelpPresented = false
+    @State var settingPresence = false
 
-	@EnvironmentObject var switcher: AccountSwitcher
-	@EnvironmentObject var gateway: DiscordGateway
+    @EnvironmentObject var switcher: AccountSwitcher
+    @EnvironmentObject var gateway: DiscordGateway
 
-	private static let presences: [(presence: PresenceStatus, icon: String)] = [
-		(.online, "circle.fill"),
-		(.idle, "moon.fill"),
-		(.dnd, "minus.circle"),
-		(.invisible, "circle")
-	]
+    private static let presences: [(presence: PresenceStatus, icon: String)] = [
+        (.online, "circle.fill"),
+        (.idle, "moon.fill"),
+        (.dnd, "minus.circle"),
+        (.invisible, "circle")
+    ]
 
-	private static let log = Logger(category: "CurrentUserFooter")
+    private static let log = Logger(category: "CurrentUserFooter")
 
-	private func updatePresence(with presence: PresenceStatus, customStatus: String? = nil, clearCustomStatus: Bool = false) {
-		// Populate activities
-		var activities: [ActivityOutgoing] = gateway.presences[user.id]?.activities.compactMap {
-			(clearCustomStatus || customStatus != nil) && $0.type == .custom ? nil : ActivityOutgoing(from: $0)
-		} ?? []
-		if let customStatus = customStatus {
-			activities.append(ActivityOutgoing(name: "Custom Status", type: .custom, state: customStatus))
-		}
+    private func updatePresence(with presence: PresenceStatus, customStatus: String? = nil, clearCustomStatus: Bool = false) {
+        var activities: [ActivityOutgoing] = gateway.presences[user.id]?.activities.compactMap {
+            (clearCustomStatus || customStatus != nil) && $0.type == .custom ? nil : ActivityOutgoing(from: $0)
+        } ?? []
 
-		let oldPresence = gateway.presences[user.id]
-		// Preemptively update presence
-		gateway.presences[user.id] = Presence(userID: user.id, status: presence, clientStatus: PresenceClientStatus(desktop: presence), activities: gateway.presences[user.id]?.activities ?? [])
-		settingPresence = true
+        if let customStatus = customStatus {
+            activities.append(ActivityOutgoing(name: "Custom Status", type: .custom, state: customStatus))
+        }
 
-		gateway.send(
-			.presenceUpdate,
-			data: GatewayPresenceUpdate(since: 0, activities: activities, status: presence, afk: false)
-		)
-		Task {
-			guard let serialized = (try? Discord_UserSettings.with {
-				$0.status = .with {
-					$0.status = .init(stringLiteral: presence.rawValue)
-					if let customStatus = activities.first(where: { $0.type == .custom }) {
-						$0.customStatus = .with {
-							$0.text = customStatus.state ?? ""
-						}
-					}
-				}
-			}.serializedData()) else {
-				Self.log.error("Failed to serialize user proto update! Something's very wrong!")
-				return
-			}
-			do { try await restAPI.updateSettingsProto(proto: serialized) } catch {
-				// Failed to update presence!
-				// Possibly rate-limited
-				Self.log.warning("Failed to patch user settings proto with new presence, possibly rate-limited")
-				gateway.presences[user.id] = oldPresence // Revert presence, it did not get set successfully
-			}
-			settingPresence = false
-		}
-	}
+        let oldPresence = gateway.presences[user.id]
+        gateway.presences[user.id] = Presence(
+            userID: user.id,
+            status: presence,
+            clientStatus: PresenceClientStatus(desktop: presence),
+            activities: gateway.presences[user.id]?.activities ?? []
+        )
+
+        settingPresence = true
+        gateway.send(
+            .presenceUpdate,
+            data: GatewayPresenceUpdate(since: 0, activities: activities, status: presence, afk: false)
+        )
+
+        Task {
+            let serialized: Data
+            do {
+                serialized = try Discord_UserSettings.with {
+                    $0.status = .with {
+                        $0.status = .init(stringLiteral: presence.rawValue)
+                        if let custom = activities.first(where: { $0.type == .custom }) {
+                            $0.customStatus = .with {
+                                $0.text = custom.state ?? ""
+                            }
+                        }
+                    }
+                }.serializedData()
+            } catch {
+                Self.log.error("Failed to serialize user proto update! Something's very wrong!")
+                return
+            }
+
+            do {
+                try await restAPI.updateSettingsProto(proto: serialized)
+            } catch {
+                Self.log.warning("Failed to patch user settings proto with new presence, possibly rate-limited")
+                gateway.presences[user.id] = oldPresence
+            }
+
+            settingPresence = false
+        }
+    }
 
     var body: some View {
 		let curUserPresence = gateway.presences[user.id]?.status ?? .offline
@@ -185,35 +195,146 @@ struct CurrentUserFooter: View {
 				}
 			}
 
-			Spacer()
+        HStack(spacing: 14) {
+            Button {
+                userPopoverPresented = true
+                AnalyticsWrapper.event(type: .openPopout, properties: [
+                    "type": "User Status Menu",
+                    "other_user_id": user.id
+                ])
+            } label: {
+                HStack(spacing: 8) {
+                    AvatarWithPresence(
+                        avatarURL: user.avatarURL(size: 160),
+                        presence: curUserPresence,
+                        animate: false
+                    )
+                    .controlSize(.small)
 
-			if #available(macOS 14.0, *) {
-				SettingsLink {
-					Image(systemName: "gear")
-						.font(.system(size: 18))
-						.opacity(0.75)
-				}
-				.buttonStyle(.plain)
-				.frame(width: 32, height: 32)
-			} else {
-				Button {
-					if #unavailable(macOS 13.0) {
-						NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
-					} else if #unavailable(macOS 14.0) {
-						NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-					}
-				} label: {
-					Image(systemName: "gear")
-						.font(.system(size: 18))
-						.opacity(0.75)
-				}
-				.buttonStyle(.plain)
-				.frame(width: 32, height: 32)
-			}
-		}
-		.frame(height: 52)
-		.padding(.horizontal, 8)
-		.background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text(user.displayName)
+                            .font(.headline)
+                        Group {
+                            if let customStatus = customStatus {
+                                Text(customStatus.state ?? "")
+                                    .lineLimit(1)
+                                    .truncationMode(.tail)
+                            } else if user.discriminator != "0" {
+                                Text("#" + user.discriminator)
+                            } else {
+                                Text("")
+                            }
+                        }
+                        .font(.system(size: 12))
+                        .opacity(0.75)
+                    }
+                }
+                .padding(2)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .popover(isPresented: $userPopoverPresented) {
+                MiniUserProfileView(
+                    user: User(from: user),
+                    member: nil,
+                    guildRoles: nil,
+                    isWebhook: false,
+                    loadError: false
+                ) {
+                    VStack(spacing: 4) {
+                        if !(user.bio?.isEmpty ?? true) { Divider() }
+
+                        Menu {
+                            ForEach(Self.presences, id: \.icon) { (presence, icon) in
+                                Button {
+                                    updatePresence(with: presence)
+                                } label: {
+                                    Image(systemName: icon)
+                                    Text(presence.toLocalizedString())
+                                }
+
+                                if presence == Self.presences.first?.presence {
+                                    Divider()
+                                }
+                            }
+                        } label: {
+                            Text(curUserPresence.toLocalizedString())
+                        }
+                        .controlSize(.large)
+                        .disabled(settingPresence)
+
+                        Button {
+                            customStatusPresented = true
+                        } label: {
+                            if customStatus != nil {
+                                HStack {
+                                    Text("Edit Custom Status")
+                                    Spacer()
+                                    Button {
+                                        updatePresence(with: curUserPresence, clearCustomStatus: true)
+                                    } label: {
+                                        Image(systemName: "xmark.circle.fill")
+                                            .font(.system(size: 18))
+                                    }
+                                    .buttonStyle(.plain)
+                                    .help("Clear Custom Status")
+                                }
+                            } else {
+                                Label("Set Custom Status", systemImage: "face.smiling")
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                        }
+                        .buttonStyle(FlatButtonStyle(outlined: true, text: true))
+                        .controlSize(.small)
+                        .disabled(settingPresence)
+
+                        Divider()
+
+                        Button {
+                            switcherPresented = true
+                            AnalyticsWrapper.event(type: .impressionAccountSwitcher)
+                        } label: {
+                            Label("Switch Accounts", systemImage: "arrow.left.arrow.right")
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .buttonStyle(FlatButtonStyle(outlined: true, text: true))
+                        .controlSize(.small)
+                    }
+                }
+            }
+
+            Spacer()
+
+            if #available(macOS 14, *) {
+                SettingsLink {
+                    Button(action: {}, label: {
+                        Image(systemName: "gear")
+                            .font(.system(size: 18))
+                            .opacity(0.75)
+                    })
+                    .buttonStyle(.plain)
+                    .frame(width: 32, height: 32)
+                }
+            } else {
+                Button(action: {
+                    if #available(macOS 13.0, *) {
+                        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+                    } else {
+                        NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
+                    }
+                }, label: {
+                    Image(systemName: "gear")
+                        .font(.system(size: 18))
+                        .opacity(0.75)
+                })
+                .buttonStyle(.plain)
+                .frame(width: 32, height: 32)
+            }
+        }
+        .frame(height: 52)
+        .padding(.horizontal, 8)
+
+		.background(Color(nsColor: .controlBackgroundColor).opacity(0.5) as Color)
 		.sheet(isPresented: $switcherPresented) {
 			accountSwitcher()
 		}
@@ -248,5 +369,5 @@ struct CurrentUserFooter: View {
 				}.padding(16)
 			}
 		}
-    }
+	}
 }

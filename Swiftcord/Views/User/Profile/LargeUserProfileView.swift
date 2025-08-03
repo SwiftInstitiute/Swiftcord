@@ -44,9 +44,9 @@ struct LargeUserProfile<Content: View>: View {
 
                 VStack(alignment: .leading, spacing: 4) {
                     Group {
-                        Text(user.username) +
-                        Text("#" + user.discriminator)
-                            .foregroundColor(Color(NSColor.textColor).opacity(0.75))
+                        Text(user.displayName) +
+                        (user.discriminator == "0" ? Text("") : Text("#" + user.discriminator)
+                            .foregroundColor(Color(NSColor.textColor).opacity(0.75)))
                     }
                     .font(.title2)
                     HStack {

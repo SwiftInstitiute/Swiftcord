@@ -13,6 +13,7 @@ import DiscordKitCore
 
 struct ContentView: View {
     @State private var loadingGuildID: Snowflake?
+    @State private var isLoadingGuilds = false
 
     @State private var presentingOnboarding = false
     @State private var presentingAddServer = false
@@ -70,11 +71,14 @@ struct ContentView: View {
         }
         .sorted { lhs, rhs in lhs.joined_at > rhs.joined_at }
         .map { ServerListItem.guild($0) }
-        return unsortedGuilds + gateway.guildFolders.compactMap { folder -> ServerListItem? in
+        
+        let folderItems = gateway.guildFolders.compactMap { folder -> ServerListItem? in
             if folder.id != nil {
                 let guilds = folder.guild_ids.compactMap {
                     gateway.cache.guilds[$0]
                 }
+                // Only show folders that have at least one loaded guild
+                guard !guilds.isEmpty else { return nil }
                 let name = folder.name ?? String(guilds.map { $0.properties.name }.joined(separator: ", "))
                 return .guildFolder(ServerFolder.GuildFolder(
                     name: name, guilds: guilds, color: folder.color.flatMap { Color(hex: $0) } ?? Color.accentColor
@@ -86,29 +90,46 @@ struct ContentView: View {
                 return .guild(guild)
             }
         }
+        
+        return unsortedGuilds + folderItems
     }
+    
+    private func getSelectedGuild() -> PreloadedGuild? {
+        guard let selectedGuildID = state.selectedGuildID else { return nil }
+        if selectedGuildID == "@me" {
+            return makeDMGuild()
+        } else {
+            return gateway.cache.guilds[selectedGuildID]
+        }
+    }
+    
+    private var serverListView: some View {
+        ScrollView(showsIndicators: false) {
+            LazyVStack(spacing: 8) {
+                ServerButton(
+                    selected: state.selectedGuildID == "@me",
+                    name: "Home",
+                    assetIconName: "DiscordIcon"
+                ) {
+                    state.selectedGuildID = "@me"
+                }
+                .padding(.top, 4)
 
-    var body: some View {
-        HStack(spacing: 0) {
-            // MARK: Server List
-            ScrollView(showsIndicators: false) {
-                LazyVStack(spacing: 8) {
-                    ServerButton(
-                        selected: state.selectedGuildID == "@me",
-                        name: "Home",
-                        assetIconName: "DiscordIcon"
-                    ) {
-                        state.selectedGuildID = "@me"
-                    }
-                    .padding(.top, 4)
+                HorizontalDividerView().frame(width: 32)
 
-                    HorizontalDividerView().frame(width: 32)
-
+                if isLoadingGuilds {
+                    // Show loading indicator while guilds are being loaded
+                    ProgressView()
+                        .scaleEffect(0.8)
+                        .frame(width: 48, height: 48)
+                        .padding(.vertical, 8)
+                } else {
                     ForEach(self.serverListItems) { item in
                         switch item {
                         case .guild(let guild):
                             ServerButton(
                                 selected: state.selectedGuildID == guild.id || loadingGuildID == guild.id,
+                                guild: guild,
                                 name: guild.properties.name,
                                 serverIconURL: guild.properties.iconURL(),
                                 isLoading: loadingGuildID == guild.id
@@ -123,29 +144,33 @@ struct ContentView: View {
                             )
                         }
                     }
-
-                    ServerButton(
-                        selected: false,
-                        name: "Add a Server",
-                        systemIconName: "plus",
-                        bgColor: .green,
-                        noIndicator: true
-                    ) {
-                        presentingAddServer = true
-                    }.padding(.bottom, 4)
                 }
-                .padding(.bottom, 8)
-                .frame(width: 72)
-            }
-            .frame(maxHeight: .infinity, alignment: .top)
-            .background(VisualEffect()
-                .overlay(Color(nsColor: NSColor.controlBackgroundColor).opacity(0.5))
-            )
 
+                ServerButton(
+                    selected: false,
+                    name: "Add a Server",
+                    systemIconName: "plus",
+                    bgColor: .green,
+                    noIndicator: true
+                ) {
+                    presentingAddServer = true
+                }.padding(.bottom, 4)
+            }
+            .padding(.bottom, 8)
+            .frame(width: 72)
+        }
+        .frame(maxHeight: .infinity, alignment: .top)
+        .background(Color(nsColor: NSColor.controlBackgroundColor).opacity(0.5))
+    }
+    
+    var body: some View {
+        HStack(spacing: 0) {
+            serverListView
             ServerView(
-                guild: state.selectedGuildID == nil
-                ? nil
-                : (state.selectedGuildID == "@me" ? makeDMGuild() : gateway.cache.guilds[state.selectedGuildID!]), serverCtx: state.serverCtx
+                guild: Binding(
+                    get: { state.selectedGuildID == nil ? nil : (state.selectedGuildID == "@me" ? makeDMGuild() : gateway.cache.guilds[state.selectedGuildID!]) },
+                    set: { _ in }
+                )
             )
         }
         .environmentObject(audioManager)
@@ -181,6 +206,14 @@ struct ContentView: View {
                 case .userReady(let payload):
                     state.loadingState = .gatewayConn
                     accountsManager.onSignedIn(with: payload.user)
+                    // Set loading state for guilds
+                    isLoadingGuilds = true
+                    // Clear loading state after 10 seconds if no guilds are loaded
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
+                        if isLoadingGuilds {
+                            isLoadingGuilds = false
+                        }
+                    }
                     fallthrough
                 case .resumed:
                     gateway.send(.voiceStateUpdate, data: GatewayVoiceStateUpdate(
@@ -190,6 +223,22 @@ struct ContentView: View {
                         self_deaf: state.selfDeaf,
                         self_video: false
                     ))
+                case .guildCreate(_):
+                    // Handle guilds that are created after the initial READY event
+                    // This is important for Nitro users with more than 100 servers
+                    // The DiscordKit should handle this automatically
+                    // Clear loading state after first guild is loaded
+                    if isLoadingGuilds {
+                        isLoadingGuilds = false
+                    }
+                case .guildDelete(_):
+                    // Handle guild removal
+                    // The DiscordKit should handle this automatically
+                    break
+                case .guildUpdate(_):
+                    // Handle guild updates
+                    // The DiscordKit should handle this automatically
+                    break
                 default: break
                 }
             }

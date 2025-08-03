@@ -33,7 +33,7 @@ struct AccountOverview: View {
 				}
 				.clipShape(Circle())
 				.frame(width: 100, height: 100)
-				Text(user.username).font(.title2).padding(.top, 6)
+				Text(user.displayName).font(.title2).padding(.top, 6)
 				Text(user.email).font(.system(.title3, weight: .regular))
 				if let phone = user.phone {
 					Text(phone)

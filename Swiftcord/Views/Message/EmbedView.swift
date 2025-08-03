@@ -35,21 +35,9 @@ struct RichEmbedView: View {
 		return newArray
 	}
 
-	@ViewBuilder
-	private func embedMedia(image: EmbedMedia) -> some View {
-		let width: Double = image.width != nil ? Double(min(400, image.width!)) : 400.0
-		let height: Double = (image.width != nil && image.height != nil)
-		? Double(width) / (Double(image.width!) / Double(image.height!))
-		: 216
-		AttachmentImage(width: width, height: height, scale: 1, url: URL(string: image.proxy_url ?? image.url)!)
-	}
-
 	var body: some View {
 		GroupBox {
-			// The width of media present to constrain width to
-			let mediaWidth = embed.image?.width ?? embed.thumbnail?.width
 			VStack(alignment: .leading, spacing: 8) {
-				// MARK: - Author
 				if let author = embed.author {
 					HStack(alignment: .center, spacing: 8) {
 						if let iconURL = author.icon_url {
@@ -57,39 +45,31 @@ struct RichEmbedView: View {
 							let height = 24.0
 							CachedAsyncImage(url: URL(string: iconURL)) { phase in
 								if let image = phase.image { image.resizable().scaledToFill() } else {
-									Spacer().frame(width: width, height: height)
+									Spacer()
+										.frame(width: width, height: height)
 								}
 							}
-							.frame(width: width, height: height)
+							.frame(
+								width: width,
+								height: height
+							)
 							.cornerRadius(12)
 						}
 
-						let authorName = author.name
-						if let urlStr = author.url, let url = URL(string: urlStr) {
-							Link(destination: url) {
-								Text(authorName).font(.headline)
-							}.foregroundColor(.primary)
-						} else {
-							Text(authorName)
-								.font(.headline)
-								.textSelection(.enabled)
+						if let authorName = author.name as? String {
+							if let urlStr = author.url, let url = URL(string: urlStr) {
+								Link(destination: url) {
+									Text(authorName).font(.headline)
+								}.foregroundColor(.primary)
+							} else {
+								Text(authorName)
+									.font(.headline)
+									.textSelection(.enabled)
+							}
 						}
 					}
 				}
-				// MARK: Provider
-				if let provider = embed.provider, let providerName = provider.name {
-					if let urlStr = provider.url, let url = URL(string: urlStr) {
-						Link(destination: url) {
-							Text(providerName).font(.headline)
-						}.foregroundColor(.primary)
-					} else {
-						Text(providerName)
-							.font(.headline)
-							.textSelection(.enabled)
-					}
-				}
 
-				// MARK: - Title
 				if let title = embed.title {
 					if let urlStr = embed.url, let url = URL(string: urlStr) {
 						Link(destination: url) {
@@ -104,7 +84,6 @@ struct RichEmbedView: View {
 					}
 				}
 
-				// MARK: - Description
 				if let description = embed.description {
 					Text(markdown: description)
 						.textSelection(.enabled)
@@ -112,7 +91,6 @@ struct RichEmbedView: View {
 						.frame(maxWidth: .infinity, alignment: .leading)
 				}
 
-				// MARK: - Fields
 				if let fields = embed.fields {
 					let grouped_fields = groupFields(_fields: fields)
 
@@ -132,16 +110,14 @@ struct RichEmbedView: View {
 					}
 				}
 
-				// MARK: - Image
 				if let image = embed.image {
-					embedMedia(image: image)
-				}
-				// MARK: Thumbnail
-				if let thumb = embed.thumbnail {
-					embedMedia(image: thumb)
+					let width: Double = image.width != nil ? Double(min(384, image.width!)) : 384.0
+					let height: Double = (image.width != nil && image.height != nil)
+					? Double(width) / (Double(image.width!) / Double(image.height!))
+					: 216
+					AttachmentImage(width: width, height: height, scale: 1, url: URL(string: image.url)!)
 				}
 
-				// MARK: - Footer
 				if let footer = embed.footer {
 					HStack {
 						if let iconURL = footer.icon_url {
@@ -174,9 +150,7 @@ struct RichEmbedView: View {
 						}
 					}
 				}
-			}
-			.frame(maxWidth: mediaWidth != nil ? CGFloat(min(400, mediaWidth!)) : nil)
-			.padding(10)
+			}.padding(10)
 		}
 		.background(
 			HStack {
