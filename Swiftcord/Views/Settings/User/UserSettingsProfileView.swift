@@ -34,10 +34,11 @@ struct UserSettingsProfileView: View {
 					Text("Preview").textCase(.uppercase).font(.headline)
 					MiniUserProfileView(
 						user: User(from: user),
-						profile: $profile
-					) {
-						Text("Customising my profile").font(.headline).textCase(.uppercase)
-					}
+						member: nil,
+						contentSlot: {
+							Text("Customising my profile").font(.headline).textCase(.uppercase)
+						}
+					)
 					.background(Color(NSColor.controlBackgroundColor))
 					.cornerRadius(8)
 					.shadow(color: .black.opacity(0.24), radius: 16, x: 0, y: 8)

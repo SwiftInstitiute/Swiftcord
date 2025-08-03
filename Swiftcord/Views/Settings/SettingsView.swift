@@ -33,7 +33,7 @@ private extension SettingsView {
 
 		var body: some View {
 			TabView {
-				UserSettingsView(user: user).tabItem {
+				UserSettings(user: user).tabItem {
 					Label("User", systemImage: "person.crop.circle")
 				}
 
@@ -165,7 +165,7 @@ private extension SettingsView {
 							Text(item.nameString)
 						} icon: {
 							if let icon = item.icon {
-								Group {
+								VStack {
 									switch icon.icon {
 									case .system(let name):
 										Image(systemName: name)
@@ -203,7 +203,7 @@ private extension SettingsView {
 						case .accessibility:
 							AppSettingsAccessibilityView()
 						case .account:
-							UserSettingsAccountView(user: user)
+							UserSettingsAccount(user: user)
 						case .profile:
 							UserSettingsProfileView(user: user)
 						case .privacy:

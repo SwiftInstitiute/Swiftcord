@@ -17,7 +17,7 @@ struct ProfileKey: Hashable {
 
 private let profileCache = Cache<ProfileKey, UserProfile>()
 
-struct UserAvatarView: View, Equatable {
+struct UserAvatarView: View {
     let user: User
     let guildID: Snowflake?
     let webhookID: Snowflake?
@@ -81,72 +81,70 @@ struct UserAvatarView: View, Equatable {
 		.popover(isPresented: $infoPresenting, arrowEdge: .trailing) {
 			MiniUserProfileView(
 				user: user,
-				profile: $profile,
-				guildRoles: ctx.roles,
+				member: profile?.guild_member,
+				guildRoles: ctx.roles as? [Role],
 				isWebhook: webhookID != nil,
-				loadError: loadFullFailed
-			) {
-				if let profile = profile, guildID != "@me" {
-					if let guildRoles = ctx.roles as? [Role] {
-						let roles = guildRoles.filter {
-							profile.guild_member?.roles.contains($0.id) ?? false
-						}
+				loadError: loadFullFailed,
+				contentSlot: {
+					if let profile = profile, guildID != "@me" {
+						if let guildRoles = ctx.roles as? [Role] {
+							let roles = guildRoles.filter {
+								profile.guild_member?.roles.contains($0.id) ?? false
+							}
 
-						Text(
-							profile.guild_member == nil
-							? "user.roles.loading"
-							: (roles.isEmpty ? "user.roles.none" : (roles.count == 1 ? "user.roles.one" : "user.roles.many"))
-						)
+							Text(
+								profile.guild_member == nil
+								? "user.roles.loading"
+								: (roles.isEmpty ? "user.roles.none" : (roles.count == 1 ? "user.roles.one" : "user.roles.many"))
+							)
+							.font(.headline)
+							.textCase(.uppercase)
+							.padding(.top, 6)
+							if !roles.isEmpty {
+								TagCloudView(
+									content: roles.map { role in
+										HStack(spacing: 6) {
+											Circle()
+												.fill(Color(hex: role.color))
+												.frame(width: 14, height: 14)
+												.padding(.leading, 6)
+											Text(role.name)
+												.font(.system(size: 12))
+												.padding(.trailing, 8)
+										}
+										.frame(height: 24)
+										.background(.gray.opacity(0.2))
+										.cornerRadius(7)
+									}
+								).padding(-2)
+							}
+						} else {
+							ProgressView("user.roles.loading")
+								.progressViewStyle(.linear)
+								.frame(maxWidth: .infinity)
+								.tint(.blue)
+						}
+					}
+					
+					Text("user.note")
 						.font(.headline)
 						.textCase(.uppercase)
 						.padding(.top, 6)
-						if !roles.isEmpty {
-							TagCloudView(
-								content: roles.map { role in
-									HStack(spacing: 6) {
-										Circle()
-											.fill(Color(hex: role.color))
-											.frame(width: 14, height: 14)
-											.padding(.leading, 6)
-										Text(role.name)
-											.font(.system(size: 12))
-											.padding(.trailing, 8)
-									}
-									.frame(height: 24)
-									.background(.gray.opacity(0.2))
-									.cornerRadius(7)
-								}
-							).padding(-2)
+					// Notes are stored locally for now, but eventually will be synced with the Discord API
+					TextField("Add a note to this user (only visible to you)", text: $note)
+						.textFieldStyle(.roundedBorder)
+						.onChange(of: note) { _ in
+							if note.isEmpty {
+								UserDefaults.standard.removeObject(forKey: "notes.\(user.id)")
+							} else {
+								UserDefaults.standard.set(note, forKey: "notes.\(user.id)")
+							}
 						}
-					} else {
-						ProgressView("user.roles.loading")
-							.progressViewStyle(.linear)
-							.frame(maxWidth: .infinity)
-							.tint(.blue)
-					}
+						.onAppear {
+							note = UserDefaults.standard.string(forKey: "notes.\(user.id)") ?? ""
+						}
 				}
-				Text("user.note")
-					.font(.headline)
-					.textCase(.uppercase)
-					.padding(.top, 6)
-				// Notes are stored locally for now, but eventually will be synced with the Discord API
-				TextField("Add a note to this user (only visible to you)", text: $note)
-					.textFieldStyle(.roundedBorder)
-					.onChange(of: note) { _ in
-						if note.isEmpty {
-							UserDefaults.standard.removeObject(forKey: "notes.\(user.id)")
-						} else {
-							UserDefaults.standard.set(note, forKey: "notes.\(user.id)")
-						}
-					}
-					.onAppear {
-						note = UserDefaults.standard.string(forKey: "notes.\(user.id)") ?? ""
-					}
-			}
+			)
 		}
-	}
-
-	static func == (lhs: UserAvatarView, rhs: UserAvatarView) -> Bool {
-		lhs.user.id == rhs.user.id
 	}
 }
