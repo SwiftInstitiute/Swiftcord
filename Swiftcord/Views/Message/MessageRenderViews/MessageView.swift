@@ -119,7 +119,7 @@ struct MessageView: View, Equatable {
             }
         }
         .padding(.trailing, 32)
-		.padding(.vertical, Self.lineSpacing / 2)
+		.padding(.vertical, 8)
 		.background(
 			Rectangle()
 				.fill(.blue)

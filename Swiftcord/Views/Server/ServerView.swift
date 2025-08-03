@@ -151,119 +151,136 @@ struct ServerView: View {
   
 
   
-  var body: some View {
-    if #available(macOS 13, *) {
-      NavigationSplitView {
-        sidebarContent
-      } detail: {
-        detailContent
+  private var navigationToolbar: some ToolbarContent {
+    ToolbarItemGroup(placement: .navigation) {
+      HStack(spacing: 12) {
+        Button {
+          NSApp.keyWindow?.firstResponder?.tryToPerform(#selector(NSSplitViewController.toggleSidebar(_:)), with: nil)
+        } label: {
+          Image(
+            systemName: serverCtx.channel?.type == .dm
+            ? "at"
+            : (serverCtx.channel?.type == .groupDM ? "person.2.fill" : "number")
+          ).foregroundColor(.primary.opacity(0.8))
+        }
+        .buttonStyle(.plain)
+        .frame(width: 20, height: 20)
+        
+        Text(serverCtx.channel?.label(gateway.cache.users) ?? "No Channel")
+          .font(.title2)
+          .fontWeight(.semibold)
       }
-      .environmentObject(serverCtx)
-      .navigationTitle("")
+      .padding(.horizontal, 16)
+      .padding(.vertical, 10)
       .background(Color(NSColor.controlBackgroundColor))
-      .navigationSplitViewColumnWidth(280)
-      .background(Color(NSColor.controlBackgroundColor))
-      .coordinateSpace(name: "titleBar")
-      .toolbar {
-        ToolbarItemGroup(placement: .navigation) {
-          HStack(spacing: 12) {
-            Button {
-              NSApp.keyWindow?.firstResponder?.tryToPerform(#selector(NSSplitViewController.toggleSidebar(_:)), with: nil)
-            } label: {
-              Image(
-                systemName: serverCtx.channel?.type == .dm
-                ? "at"
-                : (serverCtx.channel?.type == .groupDM ? "person.2.fill" : "number")
-              ).foregroundColor(.primary.opacity(0.8))
-            }
-            .buttonStyle(.plain)
-            .frame(width: 20, height: 20)
-            
-            Text(serverCtx.channel?.label(gateway.cache.users) ?? "No Channel")
-              .font(.title2)
-              .fontWeight(.semibold)
-          }
-          .padding(.horizontal, 16)
-          .padding(.vertical, 10)
-          .background(Color(NSColor.controlBackgroundColor))
-          .cornerRadius(8)
-        }
-        
-        ToolbarItemGroup(placement: .primaryAction) {
-          HStack(spacing: 8) {
-            Button {
-              // Play button action
-            } label: {
-              Image(systemName: "play.fill")
-                .foregroundColor(.primary.opacity(0.8))
-            }
-            .buttonStyle(.plain)
-            .frame(width: 20, height: 20)
-          }
-          .padding(.horizontal, 16)
-          .padding(.vertical, 10)
-          .background(Color(NSColor.controlBackgroundColor))
-          .cornerRadius(8)
-        }
-        
-        ToolbarItemGroup(placement: .navigation) {
-          Spacer()
-        }
-        
-        ToolbarItem(placement: .navigation) {
-          Button(action: { mediaCenterOpen = true }, label: { Image(systemName: "play.circle") })
-            .popover(isPresented: $mediaCenterOpen) { MediaControllerView() }
-      }
-      .onChange(of: audioManager.queue.count) { [oldCount = audioManager.queue.count] count in
-        if count > oldCount { mediaCenterOpen = true }
-      }
-      .onChange(of: guild) { newGuildState in
-        guard let newGuild = newGuildState else { return }
-        bootstrapGuild(with: newGuild)
-      }
-      .onChange(of: state.loadingState) { newState in if newState == .gatewayConn { loadChannels() }}
-      .onAppear {
-        if let guild = guild { bootstrapGuild(with: guild) }
-        
-        evtID = gateway.onEvent.addHandler { evt in
-          switch evt {
-              /*case .channelUpdate(let updatedCh):
-               if let chPos = channels.firstIndex(where: { ch in ch == updatedCh }) {
-               // Crappy workaround for channel list to update
-               var chs = channels
-               chs[chPos] = updatedCh
-               channels = []
-               channels = chs
-               }*/
-              // For some reason, updating one element doesnt update the UI
-              // loadChannels()*/
-            case .typingStart(let typingData):
-              guard typingData.user_id != gateway.cache.user!.id else { break }
-              
-              // Remove existing typing items, if present (prevent duplicates)
-              serverCtx.typingStarted[typingData.channel_id]?.removeAll {
-                $0.user_id == typingData.user_id
-              }
-              
-              if serverCtx.typingStarted[typingData.channel_id] == nil {
-                serverCtx.typingStarted[typingData.channel_id] = []
-              }
-              serverCtx.typingStarted[typingData.channel_id]!.append(typingData)
-              DispatchQueue.main.asyncAfter(deadline: .now() + 9) {
-                serverCtx.typingStarted[typingData.channel_id]?.removeAll {
-                  $0.user_id == typingData.user_id
-                  && $0.timestamp == typingData.timestamp
-                }
-              }
-            default: break
-          }
-        }
-      }
-      .onDisappear {
-        if let evtID = evtID { _ = gateway.onEvent.removeHandler(handler: evtID) }
-      }
-      .background(Color(NSColor.controlBackgroundColor))
+      .cornerRadius(8)
     }
   }
-}
+  
+  private var primaryActionToolbar: some ToolbarContent {
+    ToolbarItemGroup(placement: .primaryAction) {
+      HStack(spacing: 8) {
+        Button {
+          // Play button action
+        } label: {
+          Image(systemName: "play.fill")
+            .foregroundColor(.primary.opacity(0.8))
+        }
+        .buttonStyle(.plain)
+        .frame(width: 20, height: 20)
+      }
+      .padding(.horizontal, 16)
+      .padding(.vertical, 10)
+      .background(Color(NSColor.controlBackgroundColor))
+      .cornerRadius(8)
+    }
+  }
+  
+  private var mediaToolbar: some ToolbarContent {
+    Group {
+      ToolbarItemGroup(placement: .navigation) {
+        Spacer()
+      }
+      
+      ToolbarItem(placement: .navigation) {
+        Button(action: { mediaCenterOpen = true }, label: { Image(systemName: "play.circle") })
+          .popover(isPresented: $mediaCenterOpen) { MediaControllerView() }
+      }
+    }
+  }
+  
+  @available(macOS 13, *)
+  private var navigationSplitView: some View {
+    NavigationSplitView {
+      sidebarContent
+    } detail: {
+      detailContent
+    }
+    .environmentObject(serverCtx)
+    .navigationTitle("")
+    .background(Color(NSColor.controlBackgroundColor))
+    .navigationSplitViewColumnWidth(280)
+    .background(Color(NSColor.controlBackgroundColor))
+    .coordinateSpace(name: "titleBar")
+    .toolbar {
+      navigationToolbar
+      primaryActionToolbar
+      mediaToolbar
+    }
+    .onChange(of: audioManager.queue.count) { [oldCount = audioManager.queue.count] count in
+      if count > oldCount { mediaCenterOpen = true }
+    }
+    .onChange(of: guild) { newGuildState in
+      guard let newGuild = newGuildState else { return }
+      bootstrapGuild(with: newGuild)
+    }
+    .onChange(of: state.loadingState) { newState in if newState == .gatewayConn { loadChannels() }}
+    .onAppear {
+      if let guild = guild { bootstrapGuild(with: guild) }
+      
+      evtID = gateway.onEvent.addHandler { evt in
+        switch evt {
+            /*case .channelUpdate(let updatedCh):
+             if let chPos = channels.firstIndex(where: { ch in ch == updatedCh }) {
+             // Crappy workaround for channel list to update
+             var chs = channels
+             chs[chPos] = updatedCh
+             channels = []
+             channels = chs
+             }*/
+            // For some reason, updating one element doesnt update the UI
+            // loadChannels()*/
+          case .typingStart(let typingData):
+            guard typingData.user_id != gateway.cache.user!.id else { break }
+            
+            // Remove existing typing items, if present (prevent duplicates)
+            serverCtx.typingStarted[typingData.channel_id]?.removeAll {
+              $0.user_id == typingData.user_id
+            }
+            
+            if serverCtx.typingStarted[typingData.channel_id] == nil {
+              serverCtx.typingStarted[typingData.channel_id] = []
+            }
+            serverCtx.typingStarted[typingData.channel_id]!.append(typingData)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 9) {
+              serverCtx.typingStarted[typingData.channel_id]?.removeAll {
+                $0.user_id == typingData.user_id
+                && $0.timestamp == typingData.timestamp
+              }
+            }
+          default: break
+        }
+      }
+    }
+    .onDisappear {
+      if let evtID = evtID { _ = gateway.onEvent.removeHandler(handler: evtID) }
+    }
+    .background(Color(NSColor.controlBackgroundColor))
+  }
+  
+  var body: some View {
+    if #available(macOS 13, *) {
+      navigationSplitView
+    }
+  }
 }

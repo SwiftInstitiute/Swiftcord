@@ -14,13 +14,7 @@ import Introspect
 import Combine
 
 
-extension View {
-    public func flip() -> some View {
-        self
-            .rotationEffect(.radians(.pi))
-            .scaleEffect(x: -1, y: 1, anchor: .center)
-    }
-}
+
 
 struct NewAttachmentError: Identifiable {
     var id: String { title + message }
@@ -183,11 +177,11 @@ struct MessagesView: View {
 
                 if newMsg { UnreadDivider() }
                 if !shrunk && !newMsg {
-                    Spacer(minLength: 8 - MessageView.lineSpacing / 2)
+                    Spacer(minLength: 16)
                 }
             }
 
-            if isLastItem && viewModel.reachedTop || !isLastItem && !msg.timestamp.isSameDay(as: viewModel.messages[idx+1].timestamp) {
+            if !isLastItem && !msg.timestamp.isSameDay(as: viewModel.messages[idx+1].timestamp) {
                 DayDividerView(date: msg.timestamp)
             }
         }
@@ -224,9 +218,10 @@ struct MessagesView: View {
                 tableView.enclosingScrollView!.drawsBackground = false
                 tableView.enclosingScrollView!.scrollerInsets = NSEdgeInsets(top: 0, left: 0, bottom: 52, right: 0)
             }
-            .scaleEffect(x: -1, y: 1, anchor: .center)
             .frame(maxHeight: .infinity)
             .padding(.bottom, 24 + 7) // Ensure List doesn't go below text input field (and its border radius)
+            .rotationEffect(.degrees(180))
+            .scaleEffect(x: -1, y: 1, anchor: .center) // hack to make the list scroll up
         }
     }
 
