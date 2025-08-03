@@ -35,7 +35,7 @@ import DiscordKitCore
 
 	func addMessage(_ message: Message) {
 		withAnimation {
-			messages.insert(message, at: 0)
+			messages.append(message)
 		}
 	}
 

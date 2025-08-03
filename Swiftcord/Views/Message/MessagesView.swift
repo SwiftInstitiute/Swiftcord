@@ -166,14 +166,15 @@ struct MessagesView: View {
     }
 
     private var history: some View {
-        ForEach(Array(viewModel.messages.enumerated()), id: \.1.id) { (idx, msg) in
+        return ForEach(Array(viewModel.messages.enumerated()), id: \.1.id) { (idx, msg) in
             let isLastItem = idx == viewModel.messages.count-1
-            let shrunk = !isLastItem && msg.messageIsShrunk(prev: viewModel.messages[idx+1])
+            let nextMsg = idx + 1 < viewModel.messages.count ? viewModel.messages[idx + 1] : nil
+            let shrunk = !isLastItem && nextMsg != nil && msg.messageIsShrunk(prev: nextMsg!)
 
             cell(for: msg, shrunk: shrunk)
 
-            if !isLastItem, let channelID = serverCtx.channel?.id {
-                let newMsg = gateway.readState[channelID]?.last_message_id?.stringValue == viewModel.messages[idx+1].id
+            if !isLastItem, let channelID = serverCtx.channel?.id, let nextMsg = nextMsg {
+                let newMsg = gateway.readState[channelID]?.last_message_id?.stringValue == nextMsg.id
 
                 if newMsg { UnreadDivider() }
                 if !shrunk && !newMsg {
@@ -181,7 +182,7 @@ struct MessagesView: View {
                 }
             }
 
-            if !isLastItem && !msg.timestamp.isSameDay(as: viewModel.messages[idx+1].timestamp) {
+            if !isLastItem && nextMsg != nil && !msg.timestamp.isSameDay(as: nextMsg!.timestamp) {
                 DayDividerView(date: msg.timestamp)
             }
         }
@@ -192,8 +193,6 @@ struct MessagesView: View {
         ScrollViewReader { proxy in
             List {
                 Spacer(minLength: max(messageInputHeight-44-7, 0) + (viewModel.showingInfoBar ? 24 : 0)).zeroRowInsets()
-
-                history
 
                 if viewModel.reachedTop {
                     MessagesViewHeader(chl: serverCtx.channel).zeroRowInsets()
@@ -208,6 +207,8 @@ struct MessagesView: View {
                             }
                         }
                 }
+
+                history
             }
             .listStyle(.plain)
             .background(Color.clear)
@@ -219,9 +220,7 @@ struct MessagesView: View {
                 tableView.enclosingScrollView!.scrollerInsets = NSEdgeInsets(top: 0, left: 0, bottom: 52, right: 0)
             }
             .frame(maxHeight: .infinity)
-            .padding(.bottom, 24 + 7) // Ensure List doesn't go below text input field (and its border radius)
-            .rotationEffect(.degrees(180))
-            .scaleEffect(x: -1, y: 1, anchor: .center) // hack to make the list scroll up
+            .padding(.bottom, 24 + 7) // Ensure List doesn't go below text input field (and its border radius) // hack to make the list scroll up
         }
     }
 
@@ -438,7 +437,7 @@ extension MessagesView {
       try Task.checkCancellation()
       
       viewModel.reachedTop = newMessages.count < 50
-      viewModel.messages.append(contentsOf: newMessages)
+      viewModel.messages.insert(contentsOf: newMessages, at: 0)
       viewModel.fetchMessagesTask = nil
     }
   }

@@ -219,13 +219,12 @@ struct ServerView: View {
     .environmentObject(serverCtx)
     .navigationTitle("")
     .background(Color(NSColor.controlBackgroundColor))
-    .navigationSplitViewColumnWidth(280)
+    .navigationSplitViewColumnWidth(320)
     .background(Color(NSColor.controlBackgroundColor))
     .coordinateSpace(name: "titleBar")
     .toolbar {
       navigationToolbar
       primaryActionToolbar
-      mediaToolbar
     }
     .onChange(of: audioManager.queue.count) { [oldCount = audioManager.queue.count] count in
       if count > oldCount { mediaCenterOpen = true }
