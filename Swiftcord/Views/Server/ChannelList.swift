@@ -106,9 +106,16 @@ struct ChannelList: View, Equatable {
 						? "dm"
 						: "server.channel.noCategory"
 					).textCase(.uppercase).padding(.leading, 8)
+					.foregroundColor(.secondary)
+					.font(.caption)
 				) {
 					let channels = filteredChannels.discordSorted()
-					ForEach(channels, id: \.id) { channel in item(for: channel) }
+					ForEach(channels, id: \.id) { channel in 
+						item(for: channel)
+							.background(.ultraThinMaterial)
+							.clipShape(RoundedRectangle(cornerRadius: 8))
+							.padding(.vertical, 2)
+					}
 				}
 			}
 
@@ -121,8 +128,17 @@ struct ChannelList: View, Equatable {
 					$0.parent_id == channel.id && (nsfwShown || ($0.nsfw == false || $0.nsfw == nil))
 				}.discordSorted()
 				if !channels.isEmpty {
-					Section(header: Text(channel.name ?? "").textCase(.uppercase).padding(.leading, 8)) {
-						ForEach(channels, id: \.id) { channel in item(for: channel) }
+					Section(
+						header: Text(channel.name ?? "").textCase(.uppercase).padding(.leading, 8)
+							.foregroundColor(.secondary)
+							.font(.caption)
+					) {
+						ForEach(channels, id: \.id) { channel in 
+							item(for: channel)
+								.background(.ultraThinMaterial)
+								.clipShape(RoundedRectangle(cornerRadius: 8))
+								.padding(.vertical, 2)
+						}
 					}
 					.contextMenu {
 						Button(action: { Task { await readChannels(channels) } }) {
@@ -144,6 +160,7 @@ struct ChannelList: View, Equatable {
 		.padding(.horizontal, -6)
 		.listStyle(.sidebar)
 		.frame(minWidth: 240, maxHeight: .infinity)
+		.background(.ultraThinMaterial)
 		.introspectTableView { tableView in
 			tableView.enclosingScrollView!.scrollerInsets = .init(top: 0, left: 0, bottom: 0, right: 6)
 			tableView.enclosingScrollView!.automaticallyAdjustsContentInsets = false

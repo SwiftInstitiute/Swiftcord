@@ -16,12 +16,7 @@ struct ContentView: View {
     @EnvironmentObject var state: UIState
     @EnvironmentObject var accountsManager: AccountSwitcher
     
-    @State private var presentingOnboarding = false
     @State private var presentingAddServer = false
-    @AppStorage("local.seenOnboarding") private var seenOnboarding = false
-    @AppStorage("local.previousBuild") private var prevBuild: String?
-    @State private var skipWhatsNew = false
-    @State private var whatsNewMarkdown: String? = nil
     
     // Dynamic server loading
     @State private var isLoadingGuilds = false
@@ -225,26 +220,9 @@ struct ContentView: View {
             guard let id = id else { return }
             UserDefaults.standard.set(id.description, forKey: "lastSelectedGuild")
         }
-        .onChange(of: state.loadingState) { state in
-            if state == .gatewayConn { loadLastSelectedGuild() }
-            if state == .messageLoad,
-               !seenOnboarding || prevBuild != Bundle.main.infoDictionary?["CFBundleVersion"] as? String { // swiftlint:disable:this indentation_width
-                // If the user hasn't seen the onboarding (first page), present onboarding immediately
-                if !seenOnboarding { presentingOnboarding = true }
-                Task {
-                    do {
-                        whatsNewMarkdown = try await GitHubAPI
-                            .getReleaseByTag(org: "SwiftcordApp", repo: "Swiftcord", tag: "v\(Bundle.main.infoDictionary!["CFBundleShortVersionString"] ?? "")")
-                            .body
-                    } catch {
-                        skipWhatsNew = true
-                        return
-                    }
-                    // If the user has already seen the onboarding, present the onboarding sheet only after loading the changelog
-                    presentingOnboarding = true
-                }
-            }
-        }
+        		.onChange(of: state.loadingState) { state in
+			if state == .gatewayConn { loadLastSelectedGuild() }
+		}
         .onAppear {
             if state.loadingState == .messageLoad { loadLastSelectedGuild() }
 
@@ -291,17 +269,7 @@ struct ContentView: View {
             }
             _ = gateway.socket?.onSessionInvalid.addHandler { state.loadingState = .initial }
         }
-        .sheet(isPresented: $presentingOnboarding) {
-            seenOnboarding = true
-            prevBuild = Bundle.main.infoDictionary?["CFBundleVersion"] as? String
-        } content: {
-            OnboardingView(
-                skipOnboarding: seenOnboarding,
-                skipWhatsNew: $skipWhatsNew,
-                newMarkdown: $whatsNewMarkdown,
-                presenting: $presentingOnboarding
-            )
-        }
+        
         .sheet(isPresented: $presentingAddServer) {
             ServerJoinView(presented: $presentingAddServer)
         }

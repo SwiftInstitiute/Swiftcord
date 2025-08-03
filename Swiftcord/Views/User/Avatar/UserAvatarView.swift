@@ -42,7 +42,7 @@ struct UserAvatarView: View, Equatable {
 					premium_guild_since: nil,
 					premium_since: nil,
 					mutual_guilds: nil,
-					user: User(from: gateway.cache.user!)
+					user: gateway.cache.user.map { User(from: $0) } ?? user
 				)
 			}
 

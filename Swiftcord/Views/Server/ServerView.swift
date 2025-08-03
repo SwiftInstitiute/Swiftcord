@@ -89,184 +89,115 @@ struct ServerView: View {
   private var sidebarContent: some View {
     VStack {
       if let guildCtx = guild {
+        // Modern channel list with glass effect
         ChannelList(channels: guildCtx.properties.name == "DMs" ? gateway.cache.dms : guildCtx.channels.compactMap { try? $0.unwrap() }, selCh: $serverCtx.channel)
+          .environmentObject(serverCtx)
+          .background(.ultraThinMaterial)
           .toolbar {
             ToolbarItem {
-              Text(guildCtx.properties.name == "DMs" ? "dm" : "\(guildCtx.properties.name)")
-                .font(.title3)
-                .fontWeight(.semibold)
-                .frame(maxWidth: 208) // Largest width before disappearing
-            }
-          }
-          .onChange(of: serverCtx.channel?.id) { newIDState in
-            guard let newID = newIDState else { return }
-            
-            UserDefaults.standard.setValue(newID, forKey: "lastCh.\(serverCtx.guild!.id)")
-            guild = guildCtx
-          }
-      } else {
-        ZStack {}
-          .frame(minWidth: 240, maxHeight: .infinity)
-      }
-      
-      if !gateway.connected || !gateway.reachable {
-        Label(
-          gateway.reachable
-          ? "Reconnecting..."
-          : "No network connectivity",
-          systemImage: gateway.reachable ? "arrow.clockwise" : "bolt.horizontal.fill"
-        )
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 4)
-        .background(gateway.reachable ? .orange : .red)
-        .animation(.easeIn, value: gateway.reachable)
-      }
-      
-      if let user = gateway.cache.user { CurrentUserFooter(user: user) }
-    }
-  }
-  
-  private var detailContent: some View {
-    Group {
-      if serverCtx.channel != nil {
-        MessagesView()
-      } else {
-        VStack(spacing: 24) {
-          Image(serverCtx.guild?.id == "@me" ? "NoDMs" : "NoGuildChannels")
-          if serverCtx.guild?.id == "@me" {
-            Text("dm.noChannels.body").opacity(0.75)
-          } else {
-            Text("server.noChannels.header").font(.headline).textCase(.uppercase)
-            Text("server.noChannels.body")
-              .padding(.top, -16)
-              .multilineTextAlignment(.center)
-          }
-        }
-        .padding()
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(.gray.opacity(0.15))
-      }
-    }
-  }
-  
-
-  
-  private var navigationToolbar: some ToolbarContent {
-    ToolbarItemGroup(placement: .navigation) {
-      HStack(spacing: 12) {
-        Button {
-          NSApp.keyWindow?.firstResponder?.tryToPerform(#selector(NSSplitViewController.toggleSidebar(_:)), with: nil)
-        } label: {
-          Image(
-            systemName: serverCtx.channel?.type == .dm
-            ? "at"
-            : (serverCtx.channel?.type == .groupDM ? "person.2.fill" : "number")
-          ).foregroundColor(.primary.opacity(0.8))
-        }
-        .buttonStyle(.plain)
-        .frame(width: 20, height: 20)
-        
-        Text(serverCtx.channel?.label(gateway.cache.users) ?? "No Channel")
-          .font(.title2)
-          .fontWeight(.semibold)
-      }
-      .padding(.horizontal, 16)
-      .padding(.vertical, 10)
-      .background(Color(NSColor.controlBackgroundColor))
-      .cornerRadius(8)
-    }
-  }
-  
-  private var primaryActionToolbar: some ToolbarContent {
-    ToolbarItemGroup(placement: .primaryAction) {
-    }
-  }
-  
-  private var mediaToolbar: some ToolbarContent {
-    Group {
-      ToolbarItemGroup(placement: .navigation) {
-        Spacer()
-      }
-      
-      ToolbarItem(placement: .navigation) {
-        Button(action: { mediaCenterOpen = true }, label: { Image(systemName: "play.circle") })
-          .popover(isPresented: $mediaCenterOpen) { MediaControllerView() }
-      }
-    }
-  }
-  
-  @available(macOS 13, *)
-  private var navigationSplitView: some View {
-    NavigationSplitView {
-      sidebarContent
-    } detail: {
-      detailContent
-    }
-    .environmentObject(serverCtx)
-    .navigationTitle("")
-    .background(Color(NSColor.controlBackgroundColor))
-    .navigationSplitViewColumnWidth(320)
-    .background(Color(NSColor.controlBackgroundColor))
-    .coordinateSpace(name: "titleBar")
-    .toolbar {
-      navigationToolbar
-      primaryActionToolbar
-    }
-    .onChange(of: audioManager.queue.count) { [oldCount = audioManager.queue.count] count in
-      if count > oldCount { mediaCenterOpen = true }
-    }
-    .onChange(of: guild) { newGuildState in
-      guard let newGuild = newGuildState else { return }
-      bootstrapGuild(with: newGuild)
-    }
-    .onChange(of: state.loadingState) { newState in if newState == .gatewayConn { loadChannels() }}
-    .onAppear {
-      if let guild = guild { bootstrapGuild(with: guild) }
-      
-      evtID = gateway.onEvent.addHandler { evt in
-        switch evt {
-            /*case .channelUpdate(let updatedCh):
-             if let chPos = channels.firstIndex(where: { ch in ch == updatedCh }) {
-             // Crappy workaround for channel list to update
-             var chs = channels
-             chs[chPos] = updatedCh
-             channels = []
-             channels = chs
-             }*/
-            // For some reason, updating one element doesnt update the UI
-            // loadChannels()*/
-          case .typingStart(let typingData):
-            guard typingData.user_id != gateway.cache.user!.id else { break }
-            
-            // Remove existing typing items, if present (prevent duplicates)
-            serverCtx.typingStarted[typingData.channel_id]?.removeAll {
-              $0.user_id == typingData.user_id
-            }
-            
-            if serverCtx.typingStarted[typingData.channel_id] == nil {
-              serverCtx.typingStarted[typingData.channel_id] = []
-            }
-
-            serverCtx.typingStarted[typingData.channel_id]!.append(typingData)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 9) {
-              serverCtx.typingStarted[typingData.channel_id]?.removeAll {
-                $0.user_id == typingData.user_id
-                && $0.timestamp == typingData.timestamp
+              HStack {
+                Text(guildCtx.properties.name == "DMs" ? "dm" : "\(guildCtx.properties.name)")
+                  .font(.title3)
+                  .fontWeight(.semibold)
+                  .foregroundColor(.primary)
+                
+                Spacer()
+                
+                Button(action: toggleSidebar) {
+                  Image(systemName: "sidebar.left")
+                    .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
               }
+              .frame(maxWidth: 208) // Largest width before disappearing
             }
-          default: break
-        }
+          }
       }
     }
-    .onDisappear {
-      if let evtID = evtID { _ = gateway.onEvent.removeHandler(handler: evtID) }
-    }
-    .background(Color(NSColor.controlBackgroundColor))
+    .background(.ultraThinMaterial)
   }
   
   var body: some View {
-    if #available(macOS 13, *) {
-      navigationSplitView
+    HStack(spacing: 0) {
+      // Modern sidebar with glass effect
+      sidebarContent
+        .frame(width: 240)
+        .background(.ultraThinMaterial)
+      
+      // Modern content area
+      if let channel = serverCtx.channel {
+        MessagesView()
+          .environmentObject(serverCtx)
+          .background(
+            LinearGradient(
+              colors: [
+                Color(red: 0.08, green: 0.08, blue: 0.12),
+                Color(red: 0.05, green: 0.05, blue: 0.08)
+              ],
+              startPoint: .top,
+              endPoint: .bottom
+            )
+          )
+      } else {
+        // Modern empty state
+        VStack(spacing: 24) {
+          Image(systemName: "message.circle")
+            .font(.system(size: 64))
+            .foregroundColor(.secondary)
+            .background(.ultraThinMaterial)
+            .clipShape(Circle())
+          
+          VStack(spacing: 8) {
+            Text("No Channel Selected")
+              .font(.title2)
+              .fontWeight(.semibold)
+              .foregroundColor(.primary)
+            
+            Text("Choose a channel from the sidebar to start chatting")
+              .font(.body)
+              .foregroundColor(.secondary)
+              .multilineTextAlignment(.center)
+          }
+          
+          Text("Select a channel")
+            .font(.caption)
+            .fontWeight(.medium)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(.blue.opacity(0.2))
+            .foregroundColor(.blue)
+            .clipShape(Capsule())
+        }
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .padding(40)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(
+          LinearGradient(
+            colors: [
+              Color(red: 0.08, green: 0.08, blue: 0.12),
+              Color(red: 0.05, green: 0.05, blue: 0.08)
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+          )
+        )
+      }
+    }
+    .onChange(of: guild) { newGuild in
+      if let newGuild = newGuild {
+        bootstrapGuild(with: newGuild)
+      }
+    }
+    .onAppear {
+      if let existingGuild = guild {
+        bootstrapGuild(with: existingGuild)
+      }
+    }
+    .onDisappear {
+      if let evtID = evtID {
+        gateway.onEvent.removeHandler(handler: evtID)
+      }
     }
   }
 }

@@ -64,18 +64,18 @@ struct ServerButton: View {
 						hovered: $hovered
 					)
 				)
+				.background(.ultraThinMaterial)
+				.clipShape(RoundedRectangle(cornerRadius: 12))
 				.popover(isPresented: $hovered) {
 					Text(name)
 						.font(.title3)
 						.padding(8)
-						.frame(maxWidth: 300)
-						.interactiveDismissDisabled()
+						.background(.ultraThinMaterial)
+						.clipShape(RoundedRectangle(cornerRadius: 8))
 				}
-				.padding(.trailing, 8)
-			
-			Spacer()
 		}
-		.frame(width: 72, height: 48)
+		.padding(.horizontal, 8)
+		.padding(.vertical, 4)
 	}
 }
 

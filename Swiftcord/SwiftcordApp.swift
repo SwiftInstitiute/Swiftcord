@@ -75,8 +75,22 @@ struct SwiftcordApp: App {
 							state.attemptLogin = true
 							return
 						}
+						state.loadingState = .gatewayConn
 						gateway.connect(token: token)
 						restAPI.setToken(token: token)
+						
+						// Handle gateway connection events
+						_ = gateway.onEvent.addHandler { evt in
+							// Update loading state when gateway is ready
+							// We'll use a timer to check if the gateway is connected
+							DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+								if gateway.socket != nil {
+									Self.log.debug("Gateway connected")
+									state.loadingState = .messageLoad
+								}
+							}
+						}
+						
 						_ = gateway.onAuthFailure.addHandler {
 							Self.log.warning("Auth failed")
 							guard acctManager.getActiveID() != nil else {

@@ -256,6 +256,8 @@ struct MessagesView: View {
                             .zeroRowInsets()
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 15)
+                            .background(.ultraThinMaterial)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
                     } else {
                         loadingSkeleton
                             .zeroRowInsets()
@@ -267,6 +269,8 @@ struct MessagesView: View {
                                 }
                             }
                             .padding(.horizontal, 15)
+                            .background(.ultraThinMaterial)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
                 }
                 .rotationEffect(Angle(degrees: 180))
@@ -281,45 +285,73 @@ struct MessagesView: View {
                 
                 // Hide scrollbar
                 tableView.enclosingScrollView!.scrollerInsets = NSEdgeInsets(top: 0, left: 0, bottom: 0, right: -20)
+                
+                // Performance optimizations for scrolling
+                tableView.rowHeight = -1 // Use automatic row height
+                tableView.usesAutomaticRowHeights = true
             }
             .rotationEffect(Angle(degrees: 180))
             .allowsHitTesting(true)
             .contentShape(Rectangle())
         }
     }
-
-    private var hasSendPermission: Bool {
-        // For DMs and group DMs, always allow sending messages
-        if serverCtx.channel?.type == .dm || serverCtx.channel?.type == .groupDM {
-            return true
-        }
-        
-        // For server channels, check permissions
-        guard let guildID = serverCtx.guild?.id, let member = serverCtx.member else {
-            return true // Default to allowing if we can't determine permissions
-        }
-        
-        return serverCtx.channel?.computedPermissions(
-            guildID: guildID, member: member, basePerms: serverCtx.basePermissions
-        )
-        .contains(.sendMessages) ?? true
-    }
     
-    private var placeholderText: LocalizedStringKey {
-        if !hasSendPermission {
-            return "You do not have permission to send messages in this channel."
+    private var inputContainer: some View {
+        ZStack(alignment: .topLeading) {
+            MessageInfoBarView(isShown: $viewModel.showingInfoBar, state: $viewModel.infoBarData)
+                .background(.ultraThinMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+
+            let hasSendPermission: Bool = {
+                // For DMs and group DMs, always allow sending messages
+                if serverCtx.channel?.type == .dm || serverCtx.channel?.type == .groupDM {
+                    return true
+                }
+                
+                // For server channels, check permissions
+                guard let guildID = serverCtx.guild?.id, let member = serverCtx.member else {
+                    return true // Default to allowing if we can't determine permissions
+                }
+                
+                let permissions = serverCtx.channel?.computedPermissions(
+                    guildID: guildID, member: member, basePerms: serverCtx.basePermissions
+                )
+                return permissions?.contains(.sendMessages) ?? true
+            }()
+            
+            let placeholderText: LocalizedStringKey = {
+                if !hasSendPermission {
+                    return "You do not have permission to send messages in this channel."
+                }
+                
+                let channelLabel = serverCtx.channel?.label(gateway.cache.users) ?? ""
+                
+                switch serverCtx.channel?.type {
+                case .dm:
+                    return "dm.composeMsg.hint \(channelLabel)"
+                case .groupDM:
+                    return "dm.group.composeMsg.hint \(channelLabel)"
+                default:
+                    return "server.composeMsg.hint \(channelLabel)"
+                }
+            }()
+
+            MessageInputView(
+                placeholder: String(describing: placeholderText),
+                message: $viewModel.newMessage,
+                attachments: $viewModel.attachments,
+                replying: $viewModel.replying,
+                onSend: { message, attachments in
+                    sendMessage(with: message, attachments: attachments)
+                }
+            )
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .disabled(!hasSendPermission)
         }
-        
-        let channelLabel = serverCtx.channel?.label(gateway.cache.users) ?? ""
-        
-        switch serverCtx.channel?.type {
-        case .dm:
-            return "dm.composeMsg.hint \(channelLabel)"
-        case .groupDM:
-            return "dm.group.composeMsg.hint \(channelLabel)"
-        default:
-            return "server.composeMsg.hint \(channelLabel)"
-        }
+        .padding(.horizontal, 16)
+        .padding(.bottom, 16)
+        .background(.ultraThinMaterial)
     }
     
     private var typingIndicator: some View {
@@ -361,38 +393,11 @@ struct MessagesView: View {
                 }
                 .padding(.horizontal, 16)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                .background(.ultraThinMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
             )
         } else {
             return AnyView(EmptyView())
-        }
-    }
-    
-    private var inputContainer: some View {
-        ZStack(alignment: .topLeading) {
-            MessageInfoBarView(isShown: $viewModel.showingInfoBar, state: $viewModel.infoBarData)
-            
-            MessageInputView(
-                placeholder: placeholderText,
-                message: $viewModel.newMessage, attachments: $viewModel.attachments, replying: $viewModel.replying,
-                onSend: sendMessage,
-                preAttach: preAttachChecks
-            )
-            .disabled(!hasSendPermission)
-            .onAppear { viewModel.newMessage = "" }
-            .onChange(of: viewModel.newMessage) { content in
-                if content.count > viewModel.newMessage.count,
-                   Date().timeIntervalSince(viewModel.lastSentTyping) > 8 { // swiftlint:disable:this indentation_width
-                    // Send typing start msg once every 8s while typing
-                    viewModel.lastSentTyping = Date()
-                    Task {
-                        _ = try? await restAPI.typingStart(id: serverCtx.channel!.id)
-                    }
-                }
-            }
-            .overlay {
-                typingIndicator
-            }
-            .heightReader($messageInputHeight)
         }
     }
 

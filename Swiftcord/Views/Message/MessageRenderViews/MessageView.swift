@@ -205,19 +205,23 @@ private extension MessageView {
 	}
 
 	func addReaction() {
-		print(#function)
+		// TODO: Implement reaction picker
+		print("Add reaction functionality not yet implemented")
 	}
 
 	func createThread() {
-		print(#function)
+		// TODO: Implement thread creation
+		print("Create thread functionality not yet implemented")
 	}
 
 	func pinMessage() {
-		print(#function)
+		// TODO: Implement pin message functionality
+		print("Pin message functionality not yet implemented")
 	}
 
 	func editMessage() {
-		print(#function)
+		// TODO: Implement message editing
+		print("Edit message functionality not yet implemented")
 	}
     
     func readMessage() async {
