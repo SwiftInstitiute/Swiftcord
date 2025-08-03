@@ -22,6 +22,7 @@ struct CurrentUserFooter: View {
     @State var showQR = false
     @State var switcherHelpPresented = false
     @State var settingPresence = false
+    @State var settingsButtonHovered = false
 
     @EnvironmentObject var switcher: AccountSwitcher
     @EnvironmentObject var gateway: DiscordGateway
@@ -201,12 +202,21 @@ struct CurrentUserFooter: View {
                 SettingsLink {
                     Button(action: {}, label: {
                         Image(systemName: "gear")
-                            .font(.system(size: 18))
-                            .opacity(0.75)
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundColor(.white)
                     })
-                    .buttonStyle(.plain)
                     .frame(width: 32, height: 32)
+                    .background(.ultraThinMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.white.opacity(0.2), lineWidth: 0.5))
+                    .scaleEffect(settingsButtonHovered ? 1.05 : 1.0)
+                    .animation(.easeInOut(duration: 0.1), value: settingsButtonHovered)
+                    .onHover { isHovered in
+                        settingsButtonHovered = isHovered
+                    }
                 }
+                .help("Settings")
+                .accessibilityLabel("Open Settings")
             } else {
                 Button(action: {
                     if #available(macOS 13.0, *) {
@@ -216,17 +226,24 @@ struct CurrentUserFooter: View {
                     }
                 }, label: {
                     Image(systemName: "gear")
-                        .font(.system(size: 18))
-                        .opacity(0.75)
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundColor(.white)
                 })
-                .buttonStyle(.plain)
                 .frame(width: 32, height: 32)
+                .background(.ultraThinMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.white.opacity(0.2), lineWidth: 0.5))
+                .scaleEffect(settingsButtonHovered ? 1.05 : 1.0)
+                .animation(.easeInOut(duration: 0.1), value: settingsButtonHovered)
+                .onHover { isHovered in
+                    settingsButtonHovered = isHovered
+                }
+                .help("Settings")
+                .accessibilityLabel("Open Settings")
             }
         }
         .frame(height: 52)
         .padding(.horizontal, 8)
-
-		.background(Color(nsColor: .controlBackgroundColor).opacity(0.5) as Color)
 		.sheet(isPresented: $switcherPresented) {
 			accountSwitcher()
 		}

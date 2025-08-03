@@ -16,7 +16,7 @@ struct ReferenceMessageView: View {
 	@EnvironmentObject var state: UIState
 
     var body: some View {
-		HStack(alignment: .top, spacing: 4) {
+		                HStack(alignment: .top, spacing: 4) {
 			RoundedRectangle(cornerRadius: 5)
 				.trim(from: 0.5, to: 0.75)
 				.stroke(.gray.opacity(0.4), lineWidth: 2)

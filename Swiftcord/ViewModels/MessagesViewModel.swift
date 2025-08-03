@@ -49,7 +49,14 @@ import DiscordKitCore
 			// Check if message already exists to prevent duplicates
 			if !messages.contains(where: { $0.id == message.id }) {
 				messages.append(message)
-				messages.sort { $0.timestamp > $1.timestamp }
+				// Sort by timestamp with millisecond precision, newest first
+				messages.sort { first, second in
+					if first.timestamp == second.timestamp {
+						// If timestamps are equal, sort by message ID for consistent ordering
+						return first.id > second.id
+					}
+					return first.timestamp > second.timestamp
+				}
 				messageCache[message.id] = message
 			}
 		}

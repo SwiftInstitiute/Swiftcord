@@ -45,7 +45,34 @@ internal extension MessagesView {
 			try Task.checkCancellation()
 
 			viewModel.reachedTop = newMessages.count < 50
+			
+			// Add messages to cache and queue for dynamic loading
+			for message in newMessages {
+				viewModel.messageCache[message.id] = message
+				if !viewModel.loadedMessageIds.contains(message.id) {
+					viewModel.queueMessageForLoading(message.id)
+				}
+			}
+			
 			viewModel.messages.append(contentsOf: newMessages)
+			// Remove duplicates based on message ID, keeping the first occurrence
+			var seenIDs = Set<Snowflake>()
+			viewModel.messages = viewModel.messages.filter { message in
+				if seenIDs.contains(message.id) {
+					return false
+				} else {
+					seenIDs.insert(message.id)
+					return true
+				}
+			}
+			// Sort by timestamp with millisecond precision, newest first
+			viewModel.messages.sort { first, second in
+				if first.timestamp == second.timestamp {
+					// If timestamps are equal, sort by message ID for consistent ordering
+					return first.id > second.id
+				}
+				return first.timestamp > second.timestamp
+			}
 			viewModel.fetchMessagesTask = nil
 		}
 	}

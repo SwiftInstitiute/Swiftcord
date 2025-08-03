@@ -75,54 +75,54 @@ struct MessageView: View, Equatable {
                 }
                 .buttonStyle(.borderless)
             }
-            HStack(
-                alignment: MessageView.defaultTypes.contains(message.type) ? .top : .center,
-                spacing: 16
-            ) {
-                if MessageView.defaultTypes.contains(message.type) {
+            if MessageView.defaultTypes.contains(message.type) {
+                HStack(
+                    alignment: .top,
+                    spacing: 8
+                ) {
                     if !shrunk {
                         UserAvatarView(user: message.author, guildID: serverCtx.guild!.id, webhookID: message.webhook_id)
                     } else {
-						Text(message.timestamp, style: .time)
+                        Text(message.timestamp, style: .time)
                             .font(.footnote.weight(.semibold).monospaced())
                             .frame(width: 40, height: 22, alignment: .center)
                             .opacity(hovered ? 0.5 : 0)
                     }
-					VStack(alignment: .leading, spacing: Self.lineSpacing) {
+                    VStack(alignment: .leading, spacing: Self.lineSpacing) {
                         if !shrunk {
                             HStack(spacing: 6) {
                                 Text(message.member?.nick ?? message.author.displayName)
-                                    .font(.title3)
+                                    .font(.caption)
                                     .fontWeight(.medium)
-								if message.author.bot ?? false || message.webhook_id != nil {
-									// No idea what's the difference between flags and public_flags,
-									// just try both to see which is present
-									NonUserBadge(
-										flags: message.author.flags ?? message.author.public_flags,
-										isWebhook: message.webhook_id != nil
-									)
+                                    .foregroundColor(.secondary)
+                                if message.author.bot ?? false || message.webhook_id != nil {
+                                    NonUserBadge(
+                                        flags: message.author.flags ?? message.author.public_flags,
+                                        isWebhook: message.webhook_id != nil
+                                    )
                                 }
-								HStack(spacing: 0) {
-									Text(DateFormatter.messageDateFormatter.string(from: message.timestamp))
-									if let edited_timestamp = message.edited_timestamp {
-										Text("message.edited")
-										Text(edited_timestamp, style: .time)
-									}
-								}
-                                .font(.callout)
-								.opacity(0.5)
+                                HStack(spacing: 0) {
+                                    Text(DateFormatter.messageDateFormatter.string(from: message.timestamp))
+                                    if let edited_timestamp = message.edited_timestamp {
+                                        Text("message.edited")
+                                        Text(edited_timestamp, style: .time)
+                                    }
+                                }
+                                .font(.caption2)
+                                .opacity(0.5)
                             }
                         }
-						DefaultMessageView(message: message, shrunk: shrunk)
+                        DefaultMessageView(message: message, shrunk: shrunk)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
-				} else {
-					ActionMessageView(message: message, mini: false)
-				}
-                Spacer()
+                }
+            } else {
+                ActionMessageView(message: message, mini: false)
             }
         }
-        .padding(.trailing, 32)
-        .padding(.horizontal, 15)
+        .rotationEffect(.degrees(180))
+        .padding(.horizontal, 8)
+        .padding(.vertical, 2)
 		.background(
 			Rectangle()
 				.fill(.blue)
@@ -205,19 +205,23 @@ private extension MessageView {
 	}
 
 	func addReaction() {
-		print(#function)
+		// TODO: Implement reaction picker
+		print("Add reaction functionality not yet implemented")
 	}
 
 	func createThread() {
-		print(#function)
+		// TODO: Implement thread creation
+		print("Create thread functionality not yet implemented")
 	}
 
 	func pinMessage() {
-		print(#function)
+		// TODO: Implement pin message functionality
+		print("Pin message functionality not yet implemented")
 	}
 
 	func editMessage() {
-		print(#function)
+		// TODO: Implement message editing
+		print("Edit message functionality not yet implemented")
 	}
     
     func readMessage() async {

@@ -103,19 +103,31 @@ struct ActionMessageView: View {
 	}
 
 	var body: some View {
-		Image(systemName: data.icon)
-			.foregroundColor(data.color)
-			.font(.system(size: mini ? 12 : 16, weight: .medium))
-			.padding([.leading, .trailing], mini ? 0 : 12)
-		Group {
+		VStack {
+			Image(systemName: data.icon)
+				.foregroundColor(data.color)
+				.font(.system(size: mini ? 12 : 16, weight: .medium))
+				.padding([.leading, .trailing], mini ? 0 : 12)
+			
 			if mini {
 				Text(data.message).font(.body)
+					.rotationEffect(.degrees(180))
+					.scaleEffect(y: -1)
 			} else {
-				Text(data.message).font(.body)
-				+ Text(" ").font(.body)
-				+ Text(DateFormatter.messageDateFormatter.string(from: message.timestamp))
-					.font(.callout)
+				HStack(spacing: 0) {
+					Text(data.message).font(.body)
+						.rotationEffect(.degrees(180))
+						.scaleEffect(y: -1)
+					Text(" ").font(.body)
+						.rotationEffect(.degrees(180))
+						.scaleEffect(y: -1)
+					Text(DateFormatter.messageDateFormatter.string(from: message.timestamp))
+						.font(.callout)
+						.rotationEffect(.degrees(180))
+						.scaleEffect(y: -1)
+				}
 			}
-		}.opacity(0.75)
+		}
+		.opacity(0.75)
 	}
 }

@@ -33,6 +33,7 @@ struct ChannelButton: View, Equatable {
 struct GuildChButton: View {
 	let channel: Channel
 	@Binding var selectedCh: Channel?
+	@State private var hovered = false
 
 	@EnvironmentObject var state: UIState
 
@@ -45,10 +46,51 @@ struct GuildChButton: View {
 		Button { selectedCh = channel } label: {
 			let image = (state.serverCtx.guild?.properties.rules_channel_id != nil && state.serverCtx.guild?.properties.rules_channel_id == channel.id) ? "newspaper.fill" : (chIcons[channel.type] ?? "number")
 			Label(channel.label() ?? "nil", systemImage: image)
-				.padding(.vertical, 5)
-				.padding(.horizontal, 4)
+				.padding(.vertical, 8)
+				.padding(.horizontal, 12)
 				.frame(maxWidth: .infinity, alignment: .leading)
+				.background(
+					// Enhanced liquid glass channel button background
+					ZStack {
+						RoundedRectangle(cornerRadius: 8)
+							.fill(Color.clear)
+					.background(hovered ? AnyShapeStyle(Material.ultraThinMaterial) : AnyShapeStyle(Color.clear))
+							.overlay(
+								RoundedRectangle(cornerRadius: 8)
+									.stroke(
+										LinearGradient(
+											colors: [
+												Color.white.opacity(hovered ? 0.3 : 0.1),
+												Color.white.opacity(hovered ? 0.2 : 0.05),
+												Color.clear
+											],
+											startPoint: .topLeading,
+											endPoint: .bottomTrailing
+										),
+										lineWidth: hovered ? 1.5 : 0.5
+									)
+							)
+						
+						// Inner glow when hovered
+						if hovered {
+							RoundedRectangle(cornerRadius: 8)
+								.fill(
+									RadialGradient(
+										colors: [
+											Color.white.opacity(0.1),
+											Color.clear
+										],
+										center: .topLeading,
+										startRadius: 0,
+										endRadius: 40
+									)
+								)
+						}
+					}
+				)
 		}
+		.onHover { hover in hovered = hover }
+		.animation(.easeInOut(duration: 0.2), value: hovered)
 	}
 }
 
@@ -84,7 +126,46 @@ struct DMButton: View {
 				}
 				Spacer()
 			}
-			.padding(.horizontal, 6)
+			.padding(.horizontal, 12)
+			.padding(.vertical, 8)
+			.background(
+				// Liquid glass DM button background
+				ZStack {
+					RoundedRectangle(cornerRadius: 8)
+						.fill(Color.clear)
+						.background(.ultraThinMaterial)
+						.overlay(
+							RoundedRectangle(cornerRadius: 8)
+								.stroke(
+									LinearGradient(
+										colors: [
+											Color.white.opacity(0.2),
+											Color.white.opacity(0.1),
+											Color.clear
+										],
+										startPoint: .topLeading,
+										endPoint: .bottomTrailing
+									),
+									lineWidth: 1
+								)
+						)
+					
+					// Inner glow
+					RoundedRectangle(cornerRadius: 8)
+						.fill(
+							RadialGradient(
+								colors: [
+									Color.white.opacity(0.05),
+									Color.clear
+								],
+								center: .topLeading,
+								startRadius: 0,
+								endRadius: 50
+							)
+						)
+				}
+			)
+			.clipShape(RoundedRectangle(cornerRadius: 8))
 		}
 	}
 }

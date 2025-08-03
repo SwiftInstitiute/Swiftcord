@@ -6,229 +6,332 @@
 //
 
 import SwiftUI
+import DiscordKit
 import DiscordKitCore
 
-struct MessageAttachmentView: View {
-    let attachment: URL
-	let onRemove: () -> Void
-
-    var body: some View {
-		ZStack(alignment: .topTrailing) {
-			GroupBox {
-				VStack(spacing: 0) {
-					let mime = attachment.mimeType
-					if mime.prefix(5) == "image" {
-						AsyncImage(url: attachment) { image in
-							image
-								.resizable()
-								.aspectRatio(contentMode: .fill)
-								.frame(width: 140, height: 120)
-								.cornerRadius(2)
-								.clipped()
-						} placeholder: { ProgressView() }
-					} else {
-						Spacer()
-						Image(systemName: AttachmentView.mimeFileMapping[mime] ?? "doc")
-							.font(.system(size: 84))
-					}
-					Spacer(minLength: 0)
-					Text((try? attachment.resourceValues(forKeys: [URLResourceKey.nameKey]).name) ?? "No Filename")
-						.lineLimit(1)
-						.truncationMode(.middle)
-						.frame(maxWidth: .infinity, alignment: .leading)
-				}.frame(maxWidth: .infinity, maxHeight: .infinity)
-			}.frame(width: 150, height: 150)
-
-			Button(action: onRemove) {
-				Image(systemName: "trash.square.fill")
-					.symbolRenderingMode(.palette)
-					.foregroundStyle(.red, Color(.windowBackgroundColor))
-					.font(.system(size: 32))
-					.pointable()
-			}
-			.help("Remove attachment")
-			.buttonStyle(.plain)
-			.offset(x: 8, y: -8)
-		}
-	}
-}
-
 struct MessageInputView: View {
-	let placeholder: LocalizedStringKey
+	let placeholder: String
 	@Binding var message: String
 	@Binding var attachments: [URL]
 	@Binding var replying: MessagesViewModel.ReplyRef?
 	let onSend: (String, [URL]) -> Void
-	let preAttach: (URL) -> Bool
+	let preAttach: (() -> Bool)?
+	let isDisabled: Bool
+	
+	init(
+		placeholder: String,
+		message: Binding<String>,
+		attachments: Binding<[URL]>,
+		replying: Binding<MessagesViewModel.ReplyRef?>,
+		onSend: @escaping (String, [URL]) -> Void,
+		preAttach: (() -> Bool)? = nil,
+		isDisabled: Bool = false
+	) {
+		self.placeholder = placeholder
+		self._message = message
+		self._attachments = attachments
+		self._replying = replying
+		self.onSend = onSend
+		self.preAttach = preAttach
+		self.isDisabled = isDisabled
+	}
+	
+	var body: some View {
+		VStack(spacing: 0) {
+			replySection
+			inputSection
+		}
+		.background(
+			RoundedRectangle(cornerRadius: 12)
+				.fill(Color.secondary.opacity(0.1))
+		)
 
-	@State private var inhibitingSend = false
-	@State private var showingAttachmentErr = false
-	@State private var attachmentErr = ""
-	@EnvironmentObject var state: UIState
 
-	@AppStorage("showSendBtn") private var showSendButton = false
-
-	@FocusState private var messageFieldFocused: Bool
-
-    private func send() {
-			guard message.hasContent() || !attachments.isEmpty else { return }
+	}
+	
+	@ViewBuilder
+	private var replySection: some View {
+		if replying != nil {
+			MessageInputReplyView(replying: $replying)
+				.background(Color.secondary.opacity(0.1))
+				.clipShape(RoundedRectangle(cornerRadius: 8))
+				.padding(.horizontal, 12)
+				.padding(.top, 8)
+		}
+	}
+	
+	@ViewBuilder
+	private var inputSection: some View {
+		HStack(alignment: .bottom, spacing: 8) {
+			textInputSection
+			sendButton
+		}
+		.padding(.horizontal, 12)
+		.padding(.vertical, 8)
+		.background(
+			// Enhanced liquid glass input container
+			ZStack {
+				// Base glass layer with enhanced blur
+				RoundedRectangle(cornerRadius: 16)
+					.fill(Color.clear)
+					.background(.ultraThinMaterial)
+					.overlay(
+						// Sophisticated border with multiple gradients
+						RoundedRectangle(cornerRadius: 16)
+							.stroke(
+								LinearGradient(
+									colors: [
+										Color.white.opacity(0.4),
+										Color.white.opacity(0.2),
+										Color.white.opacity(0.1),
+										Color.clear
+									],
+									startPoint: .topLeading,
+									endPoint: .bottomTrailing
+								),
+								lineWidth: 1.5
+							)
+					)
+				
+				// Inner glow effect
+				RoundedRectangle(cornerRadius: 16)
+					.fill(
+						RadialGradient(
+							colors: [
+								Color.white.opacity(0.1),
+								Color.clear
+							],
+							center: .topLeading,
+							startRadius: 0,
+							endRadius: 100
+						)
+					)
+			}
+		)
+		.shadow(
+			color: Color.black.opacity(0.15),
+			radius: 12,
+			x: 0,
+			y: 4
+		)
+	}
+	
+	@ViewBuilder
+	private var textInputSection: some View {
+		VStack(spacing: 0) {
+			textField
+			attachmentsSection
+		}
+	}
+	
+	private var textField: some View {
+		TextField(placeholder, text: $message)
+			.textFieldStyle(PlainTextFieldStyle())
+			.padding(.horizontal, 16)
+			.padding(.vertical, 12)
+			.disabled(isDisabled)
+			.opacity(isDisabled ? 0.5 : 1.0)
+			.background(
+				// Enhanced liquid glass text field
+				ZStack {
+					// Base glass layer with enhanced blur
+					RoundedRectangle(cornerRadius: 12)
+						.fill(isDisabled ? Color.gray.opacity(0.1) : Color.clear)
+						.overlay(
+							// Sophisticated border with multiple gradients
+							RoundedRectangle(cornerRadius: 12)
+								.stroke(
+									LinearGradient(
+										colors: [
+											Color.white.opacity(0.5),
+											Color.white.opacity(0.3),
+											Color.white.opacity(0.1),
+											Color.clear
+										],
+										startPoint: .topLeading,
+										endPoint: .bottomTrailing
+									),
+									lineWidth: 1.5
+								)
+						)
+					
+					// Inner glow effect for depth
+					RoundedRectangle(cornerRadius: 12)
+						.fill(
+							RadialGradient(
+								colors: [
+									Color.white.opacity(0.15),
+									Color.clear
+								],
+								center: .topLeading,
+								startRadius: 0,
+								endRadius: 80
+							)
+						)
+					
+					// Subtle inner shadow for depth
+					RoundedRectangle(cornerRadius: 12)
+						.stroke(
+							Color.black.opacity(0.1),
+							lineWidth: 0.5
+						)
+						.blur(radius: 1)
+						.offset(x: 0, y: 1)
+				}
+			)
+			.shadow(
+				color: Color.black.opacity(0.1),
+				radius: 4,
+				x: 0,
+				y: 2
+			)
+			.onSubmit {
+				if !message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+					onSend(message, attachments)
+					message = ""
+					attachments = []
+				}
+			}
+	}
+	
+	@ViewBuilder
+	private var attachmentsSection: some View {
+		if !attachments.isEmpty {
+			ScrollView(.horizontal, showsIndicators: false) {
+				HStack(spacing: 8) {
+					ForEach(attachments, id: \.self) { attachment in
+						Button(action: {
+							attachments.removeAll { $0 == attachment }
+						}) {
+							HStack(spacing: 4) {
+								Text(attachment.lastPathComponent)
+									.font(.caption)
+								Image(systemName: "xmark.circle.fill")
+									.font(.caption)
+									.foregroundColor(.red)
+							}
+							.padding(.horizontal, 10)
+							.padding(.vertical, 6)
+						}
+						.background(
+							// Liquid glass attachment tag
+							ZStack {
+								RoundedRectangle(cornerRadius: 8)
+									.fill(Color.clear)
+									.background(.ultraThinMaterial)
+									.overlay(
+										RoundedRectangle(cornerRadius: 8)
+											.stroke(
+												LinearGradient(
+													colors: [
+														Color.white.opacity(0.3),
+														Color.white.opacity(0.1),
+														Color.clear
+													],
+													startPoint: .topLeading,
+													endPoint: .bottomTrailing
+												),
+												lineWidth: 1
+											)
+									)
+								
+								// Inner glow
+								RoundedRectangle(cornerRadius: 8)
+									.fill(
+										RadialGradient(
+											colors: [
+												Color.white.opacity(0.1),
+												Color.clear
+											],
+											center: .topLeading,
+											startRadius: 0,
+											endRadius: 30
+										)
+									)
+							}
+						)
+						.clipShape(RoundedRectangle(cornerRadius: 8))
+					}
+				}
+				.padding(.horizontal, 12)
+				.padding(.vertical, 8)
+			}
+			.background(
+				// Liquid glass attachments container
+				ZStack {
+					RoundedRectangle(cornerRadius: 10)
+						.fill(Color.clear)
+						.background(.ultraThinMaterial)
+						.overlay(
+							RoundedRectangle(cornerRadius: 10)
+								.stroke(
+									LinearGradient(
+										colors: [
+											Color.white.opacity(0.2),
+											Color.white.opacity(0.1),
+											Color.clear
+										],
+										startPoint: .topLeading,
+										endPoint: .bottomTrailing
+									),
+									lineWidth: 1
+								)
+						)
+				}
+			)
+			.clipShape(RoundedRectangle(cornerRadius: 10))
+		}
+	}
+	
+	private var sendButton: some View {
+		Button(action: {
 			onSend(message, attachments)
 			withAnimation { attachments.removeAll() }
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-			if replying != nil {
-				MessageInputReplyView(replying: $replying)
-				Divider()
-			}
-
-            if !attachments.isEmpty {
-                ScrollView(.horizontal) {
-                    HStack {
-						ForEach(attachments.indices, id: \.self) { idx in
-							MessageAttachmentView(attachment: attachments[idx]) {
-								guard idx < attachments.count else { return }
-								withAnimation { _ = attachments.remove(at: idx) }
-							}
-                        }
-                    }
-					.padding(16)
-                }
-				.fixedSize(horizontal: false, vertical: true)
-                Divider()
-            }
-
-			HStack(alignment: .top, spacing: 16) {
-                Button {
-                    let panel = NSOpenPanel()
-                    panel.allowsMultipleSelection = true
-                    panel.canChooseDirectories = false
-                    panel.treatsFilePackagesAsDirectories = true
-                    panel.beginSheetModal(for: NSApp.mainWindow!) { num in
-                        if num == NSApplication.ModalResponse.OK {
-							for fileURL in panel.urls {
-								if preAttach(fileURL) {
-									withAnimation { attachments.append(fileURL) }
-								} else { break }
-							}
-                        }
-                    }
-                } label: {
-					Image(systemName: "plus.circle.fill")
-						.font(.system(size: 20))
-						.opacity(0.75)
-						.pointable()
-				}
-                    .buttonStyle(.plain)
-
-				textBox
-
-				if showSendButton {
-					let canSend = message.hasContent() || !attachments.isEmpty
-					Button(action: { send() }) {
-						Image("SendArrow")
-							.foregroundColor(.accentColor)
-							.font(.system(size: 24))
-							.pointable()
-					}
-					.keyboardShortcut(.return, modifiers: [])
-					.buttonStyle(.plain)
-					.disabled(!canSend)
-					.animation(.easeOut(duration: 0.2), value: canSend)
-				}
-            }
-			.padding(.vertical, 12)
-			.padding(.horizontal, 16)
-			.animation(.easeInOut(duration: 0.3), value: showSendButton)
-        }
-        .frame(minHeight: 40)
-		.background(.regularMaterial)
-		.overlay(
-			RoundedRectangle(cornerRadius: 7)
-				.strokeBorder(Color(nsColor: .separatorColor), lineWidth: 1)
-		)
-		.cornerRadius(7)
-        .padding(.horizontal, 16)
-        .offset(y: -12)
-    }
-}
-
-extension MessageInputView {
-	@ViewBuilder
-	var textBox: some View {
-		Group {
-			if #available(macOS 13, *) {
-				TextField(placeholder, text: $message, axis: .vertical)
-					.onSubmit(send)
-			} else {
-				TextEditor(
-					text: .init(
-						get: { message },
-						set: { newValue in
-							var modifiableValue = newValue
-							var returnIndex = modifiableValue.firstIndex { $0.isReturn }
-
-							while let index = returnIndex {
-								// Check if previous value or next value is a new line character. If so, do not
-								// remove the return key since it might be needed.
-								var shouldRemove = true
-
-								let previousIndex = index > modifiableValue.startIndex ? modifiableValue.index(before: index) : nil
-								let nextIndex = index < modifiableValue.endIndex ? modifiableValue.index(after: index) : nil
-
-								if let previousIndex, previousIndex >= modifiableValue.startIndex, modifiableValue[previousIndex].isNewline {
-									shouldRemove = false
-								}
-
-								if let nextIndex, nextIndex < modifiableValue.endIndex, modifiableValue[nextIndex].isNewline {
-									shouldRemove = false
-								}
-
-								if shouldRemove {
-									modifiableValue.remove(at: index)
-								}
-
-								returnIndex = modifiableValue.indices
-									.filter { $0 > index }
-									.first { modifiableValue[$0].isReturn }
-							}
-							message = modifiableValue
-						}
-					)
-				)
-				.onKeyDown { key in
-					switch key {
-					case .return:
-						send()
-					}
-				}
+		}) {
+			Image(systemName: "arrow.up.circle.fill")
+				.font(.title2)
+				.foregroundColor(.blue)
+				.padding(8)
 				.background(
-					Text(placeholder)
-						.frame(maxWidth: .infinity, alignment: .leading)
-						.padding(.leading, 5)
-						.foregroundColor(Color(.placeholderTextColor))
-						.opacity(message.count == 0 ? 1.0 : 0)
-						.allowsHitTesting(false)
+					// Liquid glass send button
+					ZStack {
+						Circle()
+							.fill(Color.clear)
+							.background(.ultraThinMaterial)
+							.overlay(
+								Circle()
+									.stroke(
+										LinearGradient(
+											colors: [
+												Color.white.opacity(0.4),
+												Color.white.opacity(0.2),
+												Color.clear
+											],
+											startPoint: .topLeading,
+											endPoint: .bottomTrailing
+										),
+										lineWidth: 1
+									)
+							)
+						
+						// Inner glow
+						Circle()
+							.fill(
+								RadialGradient(
+									colors: [
+										Color.white.opacity(0.1),
+										Color.clear
+									],
+									center: .topLeading,
+									startRadius: 0,
+									endRadius: 20
+								)
+							)
+					}
 				)
-			}
+				.clipShape(Circle())
 		}
-		.font(.messageInput)
-		.textFieldStyle(.plain)
-		.fixedSize(horizontal: false, vertical: true)
-		.frame(maxWidth: .infinity)
-		.lineSpacing(4)
-		.disableAutocorrection(false)
-		.focused($messageFieldFocused)
-		.onChange(of: state.serverCtx.channel) { _ in
-			messageFieldFocused = true
-		}
-		.offset(y: 2)
+		.buttonStyle(.plain)
+		.disabled(isDisabled || (message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && attachments.isEmpty))
 	}
-}
-
-struct MessageInputView_Previews: PreviewProvider {
-    static var previews: some View {
-        EmptyView()
-    }
 }
