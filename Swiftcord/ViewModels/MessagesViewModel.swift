@@ -35,8 +35,11 @@ import DiscordKitCore
 
 	func addMessage(_ message: Message) {
 		withAnimation {
-			messages.append(message)
-			messages.sort { $0.timestamp < $1.timestamp }
+			// Check if message already exists to prevent duplicates
+			if !messages.contains(where: { $0.id == message.id }) {
+				messages.append(message)
+				messages.sort { $0.timestamp > $1.timestamp }
+			}
 		}
 	}
 

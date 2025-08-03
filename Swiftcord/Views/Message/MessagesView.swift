@@ -479,6 +479,7 @@ extension MessagesView {
         
         viewModel.fetchMessagesTask = nil
         viewModel.loadError = true
+        viewModel.reachedTop = true
         viewModel.showingInfoBar = true
         viewModel.infoBarData = InfoBarData(
           message: "**Messages failed to load**",
@@ -494,7 +495,17 @@ extension MessagesView {
       
       viewModel.reachedTop = newMessages.count < 50
       viewModel.messages.append(contentsOf: newMessages)
-      viewModel.messages.sort { $0.timestamp < $1.timestamp }
+      // Remove duplicates based on message ID, keeping the first occurrence
+      var seenIDs = Set<Snowflake>()
+      viewModel.messages = viewModel.messages.filter { message in
+        if seenIDs.contains(message.id) {
+          return false
+        } else {
+          seenIDs.insert(message.id)
+          return true
+        }
+      }
+      viewModel.messages.sort { $0.timestamp > $1.timestamp }
       viewModel.fetchMessagesTask = nil
     }
   }
