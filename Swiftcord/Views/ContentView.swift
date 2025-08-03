@@ -13,6 +13,7 @@ import DiscordKitCore
 
 struct ContentView: View {
     @State private var loadingGuildID: Snowflake?
+    @State private var isLoadingGuilds = false
 
     @State private var presentingOnboarding = false
     @State private var presentingAddServer = false
@@ -70,11 +71,14 @@ struct ContentView: View {
         }
         .sorted { lhs, rhs in lhs.joined_at > rhs.joined_at }
         .map { ServerListItem.guild($0) }
-        return unsortedGuilds + gateway.guildFolders.compactMap { folder -> ServerListItem? in
+        
+        let folderItems = gateway.guildFolders.compactMap { folder -> ServerListItem? in
             if folder.id != nil {
                 let guilds = folder.guild_ids.compactMap {
                     gateway.cache.guilds[$0]
                 }
+                // Only show folders that have at least one loaded guild
+                guard !guilds.isEmpty else { return nil }
                 let name = folder.name ?? String(guilds.map { $0.properties.name }.joined(separator: ", "))
                 return .guildFolder(ServerFolder.GuildFolder(
                     name: name, guilds: guilds, color: folder.color.flatMap { Color(hex: $0) } ?? Color.accentColor
@@ -86,6 +90,8 @@ struct ContentView: View {
                 return .guild(guild)
             }
         }
+        
+        return unsortedGuilds + folderItems
     }
     
     private func getSelectedGuild() -> PreloadedGuild? {
@@ -111,24 +117,32 @@ struct ContentView: View {
 
                 HorizontalDividerView().frame(width: 32)
 
-                ForEach(self.serverListItems) { item in
-                    switch item {
-                    case .guild(let guild):
-                        ServerButton(
-                            selected: state.selectedGuildID == guild.id || loadingGuildID == guild.id,
-                            guild: guild,
-                            name: guild.properties.name,
-                            serverIconURL: guild.properties.iconURL(),
-                            isLoading: loadingGuildID == guild.id
-                        ) {
-                            state.selectedGuildID = guild.id
+                if isLoadingGuilds {
+                    // Show loading indicator while guilds are being loaded
+                    ProgressView()
+                        .scaleEffect(0.8)
+                        .frame(width: 48, height: 48)
+                        .padding(.vertical, 8)
+                } else {
+                    ForEach(self.serverListItems) { item in
+                        switch item {
+                        case .guild(let guild):
+                            ServerButton(
+                                selected: state.selectedGuildID == guild.id || loadingGuildID == guild.id,
+                                guild: guild,
+                                name: guild.properties.name,
+                                serverIconURL: guild.properties.iconURL(),
+                                isLoading: loadingGuildID == guild.id
+                            ) {
+                                state.selectedGuildID = guild.id
+                            }
+                        case .guildFolder(let folder):
+                            ServerFolder(
+                                folder: folder,
+                                selectedGuildID: $state.selectedGuildID,
+                                loadingGuildID: loadingGuildID
+                            )
                         }
-                    case .guildFolder(let folder):
-                        ServerFolder(
-                            folder: folder,
-                            selectedGuildID: $state.selectedGuildID,
-                            loadingGuildID: loadingGuildID
-                        )
                     }
                 }
 
@@ -196,6 +210,14 @@ struct ContentView: View {
                 case .userReady(let payload):
                     state.loadingState = .gatewayConn
                     accountsManager.onSignedIn(with: payload.user)
+                    // Set loading state for guilds
+                    isLoadingGuilds = true
+                    // Clear loading state after 10 seconds if no guilds are loaded
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
+                        if isLoadingGuilds {
+                            isLoadingGuilds = false
+                        }
+                    }
                     fallthrough
                 case .resumed:
                     gateway.send(.voiceStateUpdate, data: GatewayVoiceStateUpdate(
@@ -205,6 +227,26 @@ struct ContentView: View {
                         self_deaf: state.selfDeaf,
                         self_video: false
                     ))
+                case .guildCreate(let guild):
+                    // Handle guilds that are created after the initial READY event
+                    // This is important for Nitro users with more than 100 servers
+                    gateway.cache.appendOrReplace(guild)
+                    // Clear loading state after first guild is loaded
+                    if isLoadingGuilds {
+                        isLoadingGuilds = false
+                    }
+                case .guildDelete(let guild):
+                    // Handle guild removal
+                    gateway.cache.remove(guild)
+                case .guildUnavailable(let guild):
+                    // Handle guild becoming unavailable
+                    gateway.cache.remove(guild)
+                case .guildUpdate(let guild):
+                    // Handle guild updates
+                    gateway.cache.appendOrReplace(guild)
+                case .ready:
+                    // Clear loading state when initial guilds are loaded
+                    isLoadingGuilds = false
                 default: break
                 }
             }
