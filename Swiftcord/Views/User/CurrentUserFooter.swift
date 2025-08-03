@@ -98,14 +98,12 @@ struct CurrentUserFooter: View {
 					.controlSize(.small)
 
 					VStack(alignment: .leading, spacing: 0) {
-						Text(user.global_name ?? user.username).font(.headline)
+						Text(user.username).font(.headline)
 						Group {
 							if let customStatus = customStatus {
 								Text(customStatus.state ?? "")
-									.lineLimit(1)
-									.truncationMode(.tail)
 							} else {
-								Text(user.discriminator == "0" ? user.username : "#" + user.discriminator)
+								Text("#" + user.discriminator)
 							}
 						}.font(.system(size: 12)).opacity(0.75)
 					}
@@ -115,17 +113,12 @@ struct CurrentUserFooter: View {
 			}
 			.buttonStyle(.plain)
 			.popover(isPresented: $userPopoverPresented) {
-				MiniUserProfileView(user: User(from: user), member: nil) {
-					VStack(alignment: .leading, spacing: 4) {
-						VStack(alignment: .leading, spacing: 6) {
-							Text("Discord Member Since")
-								.font(.headline)
-								.textCase(.uppercase)
-							Text(user.id.createdAt?.formatted(.dateTime.day().month().year()) ?? "Unknown")
-						}
-						.padding(.bottom, 8)
-
-						Divider()
+				MiniUserProfileView(user: User(from: user), profile: .constant(UserProfile(
+					connected_accounts: [],
+					user: User(from: user)
+				))) {
+					VStack(spacing: 4) {
+						if !(user.bio?.isEmpty ?? true) { Divider() }
 
 						// Set presence
 						Menu {
@@ -185,29 +178,19 @@ struct CurrentUserFooter: View {
 
 			Spacer()
 
-			if #available(macOS 14.0, *) {
-				SettingsLink {
-					Image(systemName: "gear")
-						.font(.system(size: 18))
-						.opacity(0.75)
+			Button(action: {
+				if #available(macOS 13.0, *) {
+					NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+				} else {
+					NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
 				}
-				.buttonStyle(.plain)
-				.frame(width: 32, height: 32)
-			} else {
-				Button {
-					if #unavailable(macOS 13.0) {
-						NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
-					} else if #unavailable(macOS 14.0) {
-						NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-					}
-				} label: {
-					Image(systemName: "gear")
-						.font(.system(size: 18))
-						.opacity(0.75)
-				}
-				.buttonStyle(.plain)
-				.frame(width: 32, height: 32)
-			}
+			}, label: {
+				Image(systemName: "gearshape.fill")
+					.font(.system(size: 18))
+					.opacity(0.75)
+			})
+			.buttonStyle(.plain)
+			.frame(width: 32, height: 32)
 		}
 		.frame(height: 52)
 		.padding(.horizontal, 8)
