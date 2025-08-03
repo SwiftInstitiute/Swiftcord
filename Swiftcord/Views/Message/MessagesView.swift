@@ -211,7 +211,6 @@ struct MessagesView: View {
                     .id("unread")
             }
             if !shrunk && !newMsg {
-                Spacer(minLength: 16 - MessageView.lineSpacing / 2)
             }
             
             if newDay && newMsg {

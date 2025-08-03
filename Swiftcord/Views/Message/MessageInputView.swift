@@ -150,7 +150,7 @@ struct MessageInputView: View {
 		)
 		.cornerRadius(7)
         .padding(.horizontal, 16)
-        .offset(y: -24)
+        .offset(y: -12)
     }
 }
 
