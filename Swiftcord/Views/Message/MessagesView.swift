@@ -192,7 +192,7 @@ struct MessagesView: View {
     func history(proxy: ScrollViewProxy) -> some View {
         let messages = viewModel.messages
         return ForEach(Array(messages.enumerated()), id: \.1.id) { (idx, msg) in
-            let isLastItem = msg.id == messages.last?.id
+            let isLastItem = msg.id == messages.first?.id
             let shrunk = !isLastItem && msg.messageIsShrunk(prev: messages.after(msg))
             
             let newDay = isLastItem && viewModel.reachedTop || !isLastItem && !msg.timestamp.isSameDay(as: messages.after(msg)?.timestamp)
@@ -236,7 +236,7 @@ struct MessagesView: View {
                             withAnimation {
                                 // Already starts at very bottom, but just in case anyway
                                 // Scroll to very bottom if read, otherwise scroll to message
-                                if gateway.readState[serverCtx.channel?.id ?? "1"]?.last_message_id?.stringValue ?? "1" == viewModel.messages.first?.id ?? "1" {
+                                if gateway.readState[serverCtx.channel?.id ?? "1"]?.last_message_id?.stringValue ?? "1" == viewModel.messages.last?.id ?? "1" {
                                     proxy.scrollTo("1", anchor: .bottom)
                                 } else {
                                     proxy.scrollTo("unread", anchor: .bottom)
@@ -284,9 +284,16 @@ struct MessagesView: View {
             MessageInfoBarView(isShown: $viewModel.showingInfoBar, state: $viewModel.infoBarData)
 
             let hasSendPermission: Bool = {
-                guard let guildID = serverCtx.guild?.id, let member = serverCtx.member else {
-                    return false
+                // For DMs and group DMs, always allow sending messages
+                if serverCtx.channel?.type == .dm || serverCtx.channel?.type == .groupDM {
+                    return true
                 }
+                
+                // For server channels, check permissions
+                guard let guildID = serverCtx.guild?.id, let member = serverCtx.member else {
+                    return true // Default to allowing if we can't determine permissions
+                }
+                
                 return serverCtx.channel?.computedPermissions(
                     guildID: guildID, member: member, basePerms: serverCtx.basePermissions
                 )
@@ -462,7 +469,7 @@ extension MessagesView {
     viewModel.loadError = false
     
     viewModel.fetchMessagesTask = Task {
-      let lastMsg = viewModel.messages.last?.id
+      let lastMsg = viewModel.messages.first?.id
       
       guard let newMessages = try? await restAPI.getChannelMsgs(
         id: channel.id,
@@ -486,7 +493,7 @@ extension MessagesView {
       try Task.checkCancellation()
       
       viewModel.reachedTop = newMessages.count < 50
-      viewModel.messages.insert(contentsOf: newMessages, at: 0)
+      viewModel.messages.append(contentsOf: newMessages)
       viewModel.fetchMessagesTask = nil
     }
   }
